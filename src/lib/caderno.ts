@@ -32,7 +32,7 @@ export type LancamentoErro = {
 export type LancamentoResult = LancamentoOk | LancamentoErro
 
 /** Junta o calendário gerado pelas datas do Produtor com o que já foi lançado. */
-function semanasDoProdutor(produtor: ConfigProdutor): SemanaCiclo[] {
+export function semanasDoProdutor(produtor: ConfigProdutor): SemanaCiclo[] {
   const geradas = gerarSemanasCiclo({
     dataColheita: produtor.dataColheita,
     dataInicio: produtor.dataReferencia,

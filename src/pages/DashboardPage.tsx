@@ -1,6 +1,7 @@
 /** Home: semana atual, custo do ciclo e atalho para as ferramentas. */
 import { Link } from 'react-router-dom'
 import {
+  BookMarked,
   CalendarDays,
   ChevronRight,
   Droplets,
@@ -10,12 +11,14 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { InstalarAppCard } from '@/components/pwa/InstalarAppCard'
 import { Card } from '@/components/ui/Card'
 import { useApp } from '@/context/AppContext'
 import { APP_MODULES, culturaLabel } from '@/data/modules'
 import { STORAGE_KEYS } from '@/data/constants'
 import { formatCurrency } from '@/lib/format'
 import { gerarSemanasCiclo, mesclarSemanas, semanaHoje, totaisCiclo } from '@/lib/ciclo'
+import { lerSafras } from '@/lib/safra'
 import { readStore } from '@/storage/localStore'
 import type { CaldaFormState } from '@/hooks/useCaldaForm'
 import type { CicloCultura } from '@/types/models'
@@ -26,6 +29,7 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   '/insumos': ShoppingBag,
   '/mao-de-obra': Users,
   '/ciclo': CalendarDays,
+  '/catalogo': BookMarked,
 }
 
 const MODULE_TONES: Record<string, string> = {
@@ -34,6 +38,7 @@ const MODULE_TONES: Record<string, string> = {
   '/insumos': 'bg-cream text-field',
   '/mao-de-obra': 'bg-grape text-white',
   '/ciclo': 'bg-field-light text-white',
+  '/catalogo': 'bg-cream text-mango',
 }
 
 function saudacao() {
@@ -64,6 +69,7 @@ export function DashboardPage() {
   const atual = semanaHoje(semanas)
   const totais = semanas.length ? totaisCiclo(semanas) : null
   const progresso = atual ? Math.round((atual.numero / 42) * 100) : 0
+  const ultimaSafra = lerSafras()[0]
 
   return (
     <div className="space-y-5">
@@ -140,11 +146,27 @@ export function DashboardPage() {
         </Link>
       </Card>
 
+      <InstalarAppCard />
+
+      {ultimaSafra ? (
+        <Link to="/ciclo" className="block">
+          <Card>
+            <p className="text-sm font-semibold text-soil">Última safra fechada</p>
+            <p className="mt-1 text-lg font-bold text-field">
+              {culturaLabel(ultimaSafra.cultura)} · {formatCurrency(ultimaSafra.totais.geral)}
+            </p>
+            <p className="mt-1 text-sm text-soil">
+              {new Date(ultimaSafra.fechadaEm).toLocaleDateString('pt-BR')}
+            </p>
+          </Card>
+        </Link>
+      ) : null}
+
       <div>
         <p className="mb-2 text-sm font-semibold text-soil">Ferramentas</p>
         <div className="overflow-hidden rounded-3xl bg-paper shadow-[0_8px_30px_rgba(23,20,17,0.06)]">
           {APP_MODULES.map((module, index) => {
-            const Icon = MODULE_ICONS[module.to]
+            const Icon = MODULE_ICONS[module.to] ?? ChevronRight
             return (
               <Link
                 key={module.to}

@@ -33,6 +33,11 @@ export const APP_MODULES: AppModule[] = [
     title: 'Ciclo',
     description: '42 semanas até a colheita',
   },
+  {
+    to: '/catalogo',
+    title: 'Catálogo',
+    description: 'Produtos salvos para reusar',
+  },
 ]
 
 export function culturaLabel(cultura: Cultura | null) {

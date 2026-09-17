@@ -76,6 +76,41 @@ export interface TotaisCiclo {
   geral: number
 }
 
+/** Produto reutilizável na tela Insumos (preço e dose por porte). */
+export interface ProdutoInsumoCatalogo {
+  id: string
+  nome: string
+  preco: string
+  doseP: string
+  doseM: string
+  doseG: string
+}
+
+/** Insumo reutilizável na receita da calda. */
+export interface ProdutoCaldaCatalogo {
+  id: string
+  nome: string
+  dose: string
+  unidade: UnidadeDose
+}
+
+/** Lista local: o produtor cadastra uma vez e reaproveita no cálculo. */
+export interface CatalogoCaderno {
+  insumos: ProdutoInsumoCatalogo[]
+  calda: ProdutoCaldaCatalogo[]
+}
+
+/** Ciclo de 42 semanas já encerrado, para comparar safras. */
+export interface SafraArquivada {
+  id: string
+  cultura: Cultura | null
+  dataInicio: string | null
+  dataColheita: string | null
+  fechadaEm: string
+  totais: TotaisCiclo
+  semanas: SemanaCiclo[]
+}
+
 export const PRODUTOR_PADRAO: ConfigProdutor = {
   cultura: null,
   dataReferencia: null,

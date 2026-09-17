@@ -26,7 +26,7 @@ export const POLITICA_SECOES: SecaoPolitica[] = [
     titulo: 'Que dados usamos',
     paragrafos: [
       'No login: telefone e nome da propriedade. Guardamos também a data de entrada e o registro do seu aceite.',
-      'No caderno (neste aparelho): cultura, área, datas da safra, calda, insumos, mão de obra e ciclo.',
+      'No caderno (neste aparelho): cultura, área, datas da safra, calda, insumos, mão de obra, ciclo, catálogo de produtos e safras já fechadas.',
       'Não pedimos CPF, e-mail do produtor nem localização GPS. O app não cria conta na nuvem para o produtor.',
     ],
   },

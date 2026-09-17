@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/Select'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { TRABALHOS_CICLO, fasesDaCultura, faseDaSemana } from '@/data/fenologia'
+import { culturaLabel } from '@/data/modules'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import { semanaAlvo } from '@/lib/caderno'
 import {
@@ -21,7 +22,8 @@ import {
 } from '@/lib/ciclo'
 import { formatCurrency, parseDecimal } from '@/lib/format'
 import { exportarCicloPdf } from '@/lib/pdf'
-import type { CicloCultura, MaoDeObraSemana, SemanaCiclo } from '@/types/models'
+import { fecharSafraAtual, lerSafras, produtorAposFechar } from '@/lib/safra'
+import type { CicloCultura, MaoDeObraSemana, SafraArquivada, SemanaCiclo } from '@/types/models'
 
 function formatDia(iso: string) {
   const [y, m, d] = iso.split('-')
@@ -65,11 +67,14 @@ function chaveFase(inicio: number, fim: number) {
 }
 
 export function CicloCulturaPage() {
-  const { propriedade, produtor } = useApp()
+  const { propriedade, produtor, salvarProdutor } = useApp()
   const [ciclo, setCiclo] = usePersistedState<CicloCultura | null>(
     STORAGE_KEYS.ciclo,
     null,
   )
+  const [safras, setSafras] = useState(lerSafras)
+  const [confirmarFechar, setConfirmarFechar] = useState(false)
+  const [avisoFechar, setAvisoFechar] = useState('')
   const [usuarioEscolheuFase, setUsuarioEscolheuFase] = useState(false)
   const [faseAberta, setFaseAberta] = useState<string | null>(null)
   const [usuarioEscolheuSemana, setUsuarioEscolheuSemana] = useState(false)
@@ -113,17 +118,43 @@ export function CicloCulturaPage() {
 
   const totais = totaisCiclo(semanas)
 
+  function handleFecharSafra() {
+    if (!confirmarFechar) {
+      setConfirmarFechar(true)
+      return
+    }
+    const result = fecharSafraAtual(produtor)
+    if (!result.ok) {
+      setAvisoFechar('Defina a data do ciclo em Produtor para fechar a safra.')
+      setConfirmarFechar(false)
+      return
+    }
+    setCiclo(null)
+    salvarProdutor(produtorAposFechar(produtor))
+    setSafras(lerSafras())
+    setConfirmarFechar(false)
+    setAvisoFechar(`Safra guardada · ${formatCurrency(result.safra.totais.geral)}`)
+  }
+
   if (!semanas.length) {
     return (
-      <Card className="space-y-3">
-        <p className="font-bold text-ink">Falta a data do ciclo</p>
-        <p className="text-sm text-soil">
-          Em Produtor, informe a data de manejo ou a data da colheita.
-        </p>
-        <Link to="/produtor" className="block">
-          <Button full>Abrir Produtor</Button>
-        </Link>
-      </Card>
+      <div className="space-y-4">
+        {avisoFechar ? (
+          <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
+            {avisoFechar}
+          </p>
+        ) : null}
+        <Card className="space-y-3">
+          <p className="font-bold text-ink">Falta a data do ciclo</p>
+          <p className="text-sm text-soil">
+            Em Produtor, informe a data de manejo ou a data da colheita da nova safra.
+          </p>
+          <Link to="/produtor" className="block">
+            <Button full>Abrir Produtor</Button>
+          </Link>
+        </Card>
+        <ListaSafras safras={safras} propriedade={propriedade} />
+      </div>
     )
   }
 
@@ -204,6 +235,89 @@ export function CicloCulturaPage() {
       >
         Exportar PDF
       </Button>
+      {avisoFechar ? (
+        <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
+          {avisoFechar}
+        </p>
+      ) : null}
+      <Button variant="outline" full onClick={handleFecharSafra}>
+        {confirmarFechar
+          ? 'Confirmar: guardar e começar safra nova'
+          : 'Fechar safra'}
+      </Button>
+      {confirmarFechar ? (
+        <p className="text-sm text-soil">
+          Guarda o custo destas 42 semanas. Depois, defina as datas da próxima colheita em
+          Produtor.
+        </p>
+      ) : null}
+      <ListaSafras safras={safras} propriedade={propriedade} />
+    </div>
+  )
+}
+
+function ListaSafras({
+  safras,
+  propriedade,
+}: {
+  safras: SafraArquivada[]
+  propriedade: ReturnType<typeof useApp>['propriedade']
+}) {
+  const [aberta, setAberta] = useState<string | null>(null)
+  if (!safras.length) return null
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-semibold text-soil">Safras anteriores</p>
+      {safras.map((safra) => {
+        const expandida = aberta === safra.id
+        const periodo = safra.dataColheita || safra.dataInicio
+        return (
+          <Card key={safra.id} className="space-y-3 p-4">
+            <button
+              type="button"
+              className="flex w-full items-start justify-between gap-3 text-left"
+              onClick={() => setAberta(expandida ? null : safra.id)}
+            >
+              <span>
+                <span className="block font-bold text-ink">
+                  {culturaLabel(safra.cultura)}
+                  {periodo ? ` · ${formatDia(periodo)}` : ''}
+                </span>
+                <span className="text-sm text-soil">
+                  Fechada em {new Date(safra.fechadaEm).toLocaleDateString('pt-BR')}
+                </span>
+              </span>
+              <span className="font-bold text-field-dark">
+                {formatCurrency(safra.totais.geral)}
+              </span>
+            </button>
+            {expandida ? (
+              <div className="space-y-2 border-t border-black/5 pt-3">
+                <p className="text-sm text-soil">
+                  Insumos {formatCurrency(safra.totais.insumos)} · Mão de obra{' '}
+                  {formatCurrency(safra.totais.maoDeObra)} · Máquinas{' '}
+                  {formatCurrency(safra.totais.mecanizacao)}
+                </p>
+                <Button
+                  variant="outline"
+                  full
+                  onClick={() =>
+                    exportarCicloPdf(safra.semanas, safra.totais, propriedade, {
+                      cultura: safra.cultura,
+                      dataReferencia: safra.dataInicio,
+                      dataColheita: safra.dataColheita,
+                      areaHectares: null,
+                    })
+                  }
+                >
+                  Exportar PDF desta safra
+                </Button>
+              </div>
+            ) : null}
+          </Card>
+        )
+      })}
     </div>
   )
 }

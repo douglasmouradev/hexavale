@@ -9,5 +9,7 @@ export const STORAGE_KEYS = {
   insumos: 'hexa-manga:insumos',
   maoDeObra: 'hexa-manga:mao-de-obra',
   ciclo: 'hexa-manga:ciclo',
+  catalogo: 'hexa-manga:catalogo',
+  safras: 'hexa-manga:safras',
   consentimento: 'hexa-manga:lgpd-consentimento',
 } as const

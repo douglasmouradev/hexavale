@@ -1,6 +1,8 @@
 /** Calda orgânica: tanque, área (pré-preenchida do Produtor) e receita. */
 import { useEffect, useRef, useState, lazy, Suspense, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
+import { UsarCatalogo } from '@/components/caderno/UsarCatalogo'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -9,6 +11,11 @@ import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { useCaldaForm } from '@/hooks/useCaldaForm'
 import { calcularCalda, parseCaldaCampos, UNIDADES_DOSE, type ResultadoCalda } from '@/lib/calda'
+import {
+  guardarProdutoCalda,
+  lerCatalogo,
+  produtoCaldaPorId,
+} from '@/lib/catalogo'
 import { parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import type { Insumo, UnidadeDose } from '@/types/models'
@@ -24,6 +31,7 @@ export function CaldaOrganicaPage() {
   const { form, setForm, addInsumo, removeInsumo, updateInsumo } = useCaldaForm()
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState<ResultadoCalda | null>(form.resultado)
+  const [catalogoCalda, setCatalogoCalda] = useState(() => lerCatalogo().calda)
   const resultRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -74,10 +82,46 @@ export function CaldaOrganicaPage() {
     const next = calcularCalda({ ...campos, insumos, tanqueParcial: form.tanqueParcial })
     setResultado(next)
     setForm((current) => ({ ...current, resultado: next }))
+    for (const item of form.insumos) {
+      if (!item.nome.trim()) continue
+      guardarProdutoCalda({
+        nome: item.nome,
+        dose: item.dose,
+        unidade: item.unidade,
+      })
+    }
+    setCatalogoCalda(lerCatalogo().calda)
     window.setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 50)
     void showInterstitial('calculate')
+  }
+
+  function handleDoCatalogo(id: string) {
+    const produto = produtoCaldaPorId(id)
+    if (!produto) return
+    setForm((current) => {
+      const jaTem = current.insumos.some(
+        (item) =>
+          item.nome.trim().toLocaleLowerCase('pt-BR') ===
+          produto.nome.toLocaleLowerCase('pt-BR'),
+      )
+      if (jaTem) return current
+      const vazio = current.insumos.find((item) => !item.nome.trim() && !item.dose.trim())
+      const linha = {
+        id: vazio?.id ?? createId(),
+        nome: produto.nome,
+        dose: produto.dose,
+        unidade: produto.unidade,
+      }
+      if (vazio) {
+        return {
+          ...current,
+          insumos: current.insumos.map((item) => (item.id === vazio.id ? linha : item)),
+        }
+      }
+      return { ...current, insumos: [...current.insumos, linha] }
+    })
   }
 
   return (
@@ -143,6 +187,7 @@ export function CaldaOrganicaPage() {
 
         <Card className="space-y-4">
           <h2 className="text-lg font-bold text-ink">Insumos da calda</h2>
+          <UsarCatalogo opcoes={catalogoCalda} onEscolher={handleDoCatalogo} />
 
           {form.insumos.map((insumo, index) => (
             <div
@@ -210,6 +255,9 @@ export function CaldaOrganicaPage() {
             <Plus className="mr-2 h-5 w-5" />
             Adicionar insumo
           </Button>
+          <Link to="/catalogo" className="block text-center text-sm font-semibold text-field">
+            Ver catálogo
+          </Link>
         </Card>
 
         {error ? (

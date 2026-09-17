@@ -64,6 +64,11 @@ const MeusDadosPage = lazy(() =>
     default: module.MeusDadosPage,
   })),
 )
+const CatalogoPage = lazy(() =>
+  import('@/pages/CatalogoPage').then((module) => ({
+    default: module.CatalogoPage,
+  })),
+)
 
 /** Fallback enquanto o chunk da rota ainda não chegou. */
 function Carregando() {
@@ -96,6 +101,7 @@ export default function App() {
                   <Route path="/mao-de-obra" element={<MaoDeObraPage />} />
                   <Route path="/ciclo" element={<CicloCulturaPage />} />
                   <Route path="/meus-dados" element={<MeusDadosPage />} />
+                  <Route path="/catalogo" element={<CatalogoPage />} />
                 </Route>
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

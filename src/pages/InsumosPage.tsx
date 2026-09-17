@@ -7,9 +7,15 @@ import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
+import { UsarCatalogo } from '@/components/caderno/UsarCatalogo'
 import { STORAGE_KEYS } from '@/data/constants'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import { lancarInsumosNoCiclo, mensagemLancamento } from '@/lib/caderno'
+import {
+  guardarProdutoInsumo,
+  lerCatalogo,
+  produtoInsumoPorId,
+} from '@/lib/catalogo'
 import { formatCurrency, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { exportarInsumosPdf } from '@/lib/pdf'
@@ -53,6 +59,7 @@ export function InsumosPage() {
   const [form, setForm] = usePersistedState(STORAGE_KEYS.insumos, INITIAL)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
+  const [catalogoInsumos, setCatalogoInsumos] = useState(() => lerCatalogo().insumos)
   const linhas = form.resultado ?? null
 
   function emptyProduto(): ProdutoForm {
@@ -95,7 +102,45 @@ export function InsumosPage() {
     setError('')
     setAviso('')
     setForm((current) => ({ ...current, resultado: calculadas }))
+    for (const produto of form.produtos) {
+      if (!produto.nome.trim()) continue
+      guardarProdutoInsumo({
+        nome: produto.nome,
+        preco: produto.valor,
+        doseP: produto.doseP,
+        doseM: produto.doseM,
+        doseG: produto.doseG,
+      })
+    }
+    setCatalogoInsumos(lerCatalogo().insumos)
     void showInterstitial('calculate')
+  }
+
+  function handleDoCatalogo(id: string) {
+    const produto = produtoInsumoPorId(id)
+    if (!produto) return
+    setForm((current) => {
+      const jaTem = current.produtos.some(
+        (item) => item.nome.trim().toLocaleLowerCase('pt-BR') === produto.nome.toLocaleLowerCase('pt-BR'),
+      )
+      if (jaTem) return current
+      const vazio = current.produtos.find((item) => !item.nome.trim() && !item.valor.trim())
+      const linha = {
+        id: vazio?.id ?? createId(),
+        nome: produto.nome,
+        valor: produto.preco,
+        doseP: produto.doseP,
+        doseM: produto.doseM,
+        doseG: produto.doseG,
+      }
+      if (vazio) {
+        return {
+          ...current,
+          produtos: current.produtos.map((item) => (item.id === vazio.id ? linha : item)),
+        }
+      }
+      return { ...current, produtos: [...current.produtos, linha] }
+    })
   }
 
   function handleLancar() {
@@ -132,6 +177,8 @@ export function InsumosPage() {
           onChange={(event) => setForm({ ...form, G: event.target.value })}
         />
       </Card>
+
+      <UsarCatalogo opcoes={catalogoInsumos} onEscolher={handleDoCatalogo} />
 
       {form.produtos.map((produto, index) => (
         <Card key={produto.id} className="space-y-3">
@@ -236,6 +283,9 @@ export function InsumosPage() {
         <Plus className="mr-2 h-5 w-5" />
         Adicionar produto
       </Button>
+      <Link to="/catalogo" className="block text-center text-sm font-semibold text-field">
+        Ver catálogo
+      </Link>
 
       {error ? (
         <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">

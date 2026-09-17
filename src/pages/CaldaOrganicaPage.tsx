@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, lazy, Suspense, type FormEvent } from 'rea
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { UsarCatalogo } from '@/components/caderno/UsarCatalogo'
+import { PageSplit } from '@/components/layout/PageSplit'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -126,48 +127,66 @@ export function CaldaOrganicaPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <form className="space-y-5" onSubmit={handleCalculate}>
+    <form className="space-y-5" onSubmit={handleCalculate}>
+      <PageSplit
+        aside={
+          resultado ? (
+            <div ref={resultRef}>
+              <Suspense fallback={<p className="text-sm text-soil">Carregando resultado...</p>}>
+                <CaldaResultado
+                  resultado={resultado}
+                  onExportPdf={async () => {
+                    const { exportarCaldaPdf } = await import('@/lib/pdf')
+                    exportarCaldaPdf(resultado, propriedade, produtor)
+                  }}
+                />
+              </Suspense>
+            </div>
+          ) : null
+        }
+      >
         <Card className="space-y-4">
           <h2 className="text-lg font-bold text-ink">Tanque e área</h2>
-          <Input
-            label="Tanque (L)"
-            name="tanque"
-            inputMode="decimal"
-            placeholder="2000"
-            value={form.tanqueLitros}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, tanqueLitros: event.target.value }))
-            }
-          />
-          <Input
-            label="Área (ha)"
-            name="area"
-            inputMode="decimal"
-            placeholder={produtor.areaHectares || '10'}
-            hint={
-              produtor.areaHectares && form.areaHectares === produtor.areaHectares
-                ? 'Veio de Produtor. Pode alterar se esta calda for em outra área.'
-                : undefined
-            }
-            value={form.areaHectares}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, areaHectares: event.target.value }))
-            }
-          />
-          <Input
-            label="L/ha"
-            name="litrosPorHectare"
-            inputMode="decimal"
-            placeholder="400"
-            value={form.litrosPorHectare}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                litrosPorHectare: event.target.value,
-              }))
-            }
-          />
+          <div className="grid gap-3 lg:grid-cols-3">
+            <Input
+              label="Tanque (L)"
+              name="tanque"
+              inputMode="decimal"
+              placeholder="2000"
+              value={form.tanqueLitros}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, tanqueLitros: event.target.value }))
+              }
+            />
+            <Input
+              label="Área (ha)"
+              name="area"
+              inputMode="decimal"
+              placeholder={produtor.areaHectares || '10'}
+              hint={
+                produtor.areaHectares && form.areaHectares === produtor.areaHectares
+                  ? 'Veio de Produtor. Pode alterar se esta calda for em outra área.'
+                  : undefined
+              }
+              value={form.areaHectares}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, areaHectares: event.target.value }))
+              }
+            />
+            <Input
+              label="L/ha"
+              name="litrosPorHectare"
+              inputMode="decimal"
+              placeholder="400"
+              value={form.litrosPorHectare}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  litrosPorHectare: event.target.value,
+                }))
+              }
+            />
+          </div>
           <label className="flex items-center gap-3 border border-line bg-cream/50 px-3 py-3">
             <input
               type="checkbox"
@@ -259,6 +278,9 @@ export function CaldaOrganicaPage() {
           <Link to="/catalogo" className="block text-center text-sm font-semibold text-field">
             Ver catálogo
           </Link>
+          <Link to="/custo-calda" className="block text-center text-sm font-semibold text-field">
+            Custo do tanque em kg
+          </Link>
         </Card>
 
         {error ? <Banner tone="danger">{error}</Banner> : null}
@@ -266,21 +288,7 @@ export function CaldaOrganicaPage() {
         <Button type="submit" full>
           Calcular
         </Button>
-      </form>
-
-      <div ref={resultRef}>
-        {resultado ? (
-          <Suspense fallback={<p className="text-sm text-soil">Carregando resultado...</p>}>
-            <CaldaResultado
-              resultado={resultado}
-              onExportPdf={async () => {
-                const { exportarCaldaPdf } = await import('@/lib/pdf')
-                exportarCaldaPdf(resultado, propriedade, produtor)
-              }}
-            />
-          </Suspense>
-        ) : null}
-      </div>
-    </div>
+      </PageSplit>
+    </form>
   )
 }

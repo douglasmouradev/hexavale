@@ -22,7 +22,7 @@ export function ConsentGate() {
       aria-modal="true"
       aria-labelledby="lgpd-title"
     >
-      <div className="w-full max-w-md space-y-4 rounded-leaf bg-paper p-5 shadow-lift">
+      <div className="w-full max-w-md space-y-4 rounded-leaf bg-paper p-5 shadow-lift lg:max-w-lg lg:p-8">
         <h2 id="lgpd-title" className="font-display text-2xl font-bold text-field">
           Antes de continuar
         </h2>

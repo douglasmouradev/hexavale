@@ -19,6 +19,10 @@ export async function adminRequest<T>(path: string, init: RequestInit = {}): Pro
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
   const response = await fetch(path, { ...init, headers })
+  const tipo = response.headers.get('content-type') || ''
+  if (!tipo.includes('application/json')) {
+    throw new Error('Recarregue com Ctrl+Shift+R e entre de novo no painel.')
+  }
   const data = (await response.json().catch(() => ({}))) as T & { error?: string }
   if (!response.ok) {
     throw new Error(data.error || 'Falha na requisição.')
@@ -39,8 +43,11 @@ export interface AdVideo {
 export async function fetchCurrentAd() {
   try {
     const response = await fetch('/api/ads/atual')
-    if (!response.ok) return null
-    return (await response.json()) as { id: number; titulo: string; url: string }
+    const tipo = response.headers.get('content-type') || ''
+    if (!response.ok || !tipo.includes('application/json')) return null
+    const data = (await response.json()) as { id: number; titulo: string; url: string }
+    if (!data?.url) return null
+    return data
   } catch {
     return null
   }

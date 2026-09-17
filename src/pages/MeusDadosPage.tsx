@@ -68,6 +68,7 @@ export function MeusDadosPage() {
         subtitle="Acesso, correção, cópia e exclusão neste aparelho."
       />
 
+      <div className="grid gap-5 lg:grid-cols-2">
       <Card>
         <h3 className="mb-1 font-medium text-ink">Neste aparelho</h3>
         <Row label="Propriedade" value={propriedade?.nome ?? '—'} />
@@ -97,6 +98,7 @@ export function MeusDadosPage() {
           Corrigir em Produtor
         </Link>
       </Card>
+      </div>
 
       <Card className="space-y-3">
         <Button full variant="secondary" onClick={() => baixarDadosTitular()}>

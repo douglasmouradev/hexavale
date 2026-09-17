@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { DateField } from '@/components/ui/DateField'
 import { Input } from '@/components/ui/Input'
 import { PageTitle } from '@/components/ui/PageTitle'
 import { useApp } from '@/context/AppContext'
@@ -82,6 +83,7 @@ export function ProdutorPage() {
       </div>
 
       <Card className="space-y-4">
+        <div className="grid gap-4 lg:grid-cols-3">
         <Input
           label="Área (ha)"
           name="areaHectares"
@@ -94,28 +96,26 @@ export function ProdutorPage() {
           }}
           hint="Usada na calda, se o campo de área estiver vazio."
         />
-        <Input
+        <DateField
           label="Início do manejo"
-          type="date"
           name="dataReferencia"
           value={dataReferencia}
-          onChange={(event) => {
-            setDataReferencia(event.target.value)
+          onChange={(iso) => {
+            setDataReferencia(iso)
             setSaved(false)
           }}
-          hint=""
         />
-        <Input
+        <DateField
           label="Data da colheita"
-          type="date"
           name="dataColheita"
           value={dataColheita}
-          onChange={(event) => {
-            setDataColheita(event.target.value)
+          onChange={(iso) => {
+            setDataColheita(iso)
             setSaved(false)
           }}
           hint="Se preencher a colheita, as 42 semanas contam de trás para frente."
         />
+        </div>
       </Card>
 
       {primeiraSemana && ultimaSemana ? (

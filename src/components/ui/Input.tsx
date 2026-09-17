@@ -12,11 +12,13 @@ export function Input({ label, hint, id, className, ...props }: InputProps) {
 
   return (
     <label className="block space-y-1.5" htmlFor={inputId}>
-      <span className="text-sm font-medium text-soil">{label}</span>
+      <span className="text-[13px] font-semibold tracking-[0.02em] text-soil">
+        {label}
+      </span>
       <input
         id={inputId}
         className={cn(
-          'min-h-14 w-full rounded-leaf border border-line bg-paper px-3 text-lg font-medium text-ink outline-none placeholder:text-soil/40 focus:border-field',
+          'min-h-14 w-full rounded-leaf border-0 bg-cream px-3.5 text-[17px] font-medium text-ink outline-none placeholder:text-soil/30 focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)] lg:min-h-12 lg:text-base',
           className,
         )}
         {...props}

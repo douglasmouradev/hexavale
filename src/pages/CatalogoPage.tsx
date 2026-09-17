@@ -21,6 +21,7 @@ export function CatalogoPage() {
         subtitle="Produtos deste aparelho. O cálculo atualiza preço e dose."
       />
 
+      <div className="grid gap-5 lg:grid-cols-2">
       <Card className="p-0">
         <h3 className="border-b border-line px-4 py-3 font-medium text-ink">Insumos por porte</h3>
         {catalogo.insumos.length === 0 ? (
@@ -88,6 +89,7 @@ export function CatalogoPage() {
           ))
         )}
       </Card>
+    </div>
     </div>
   )
 }

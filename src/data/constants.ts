@@ -13,4 +13,7 @@ export const STORAGE_KEYS = {
   safras: 'hexa-manga:safras',
   amostra: 'hexa-manga:amostra',
   consentimento: 'hexa-manga:lgpd-consentimento',
+  custoCalda: 'hexa-manga:custo-calda',
+  regulador: 'hexa-manga:regulador',
+  calendario: 'hexa-manga:calendario',
 } as const

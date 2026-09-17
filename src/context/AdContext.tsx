@@ -43,8 +43,8 @@ export function AdGateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InterstitialState>(INITIAL)
 
   const showInterstitial = useCallback(async (placement: AdPlacement) => {
-    // Sem vídeo no painel ou ainda no intervalo: o produtor segue sem espera.
-    if (adEmCooldown()) return
+    // No pomar o cálculo não para a cada toque; no login o anúncio entra sempre.
+    if (placement !== 'login' && adEmCooldown()) return
     const ad = await fetchCurrentAd()
     if (!ad?.url) return
 

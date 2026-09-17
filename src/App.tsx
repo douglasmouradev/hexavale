@@ -8,6 +8,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AdminProtectedRoute } from '@/components/routes/AdminProtectedRoute'
 import { ProtectedRoute } from '@/components/routes/ProtectedRoute'
+import { RouteErrorBoundary } from '@/components/routes/RouteErrorBoundary'
 import { AdGateProvider } from '@/context/AdContext'
 import { AppProvider } from '@/context/AppContext'
 
@@ -69,6 +70,21 @@ const CatalogoPage = lazy(() =>
     default: module.CatalogoPage,
   })),
 )
+const CustoCaldaPage = lazy(() =>
+  import('@/pages/CustoCaldaPage').then((module) => ({
+    default: module.CustoCaldaPage,
+  })),
+)
+const ReguladorPage = lazy(() =>
+  import('@/pages/ReguladorPage').then((module) => ({
+    default: module.ReguladorPage,
+  })),
+)
+const CalendarioPage = lazy(() =>
+  import('@/pages/CalendarioPage').then((module) => ({
+    default: module.CalendarioPage,
+  })),
+)
 
 /** Fallback enquanto o chunk da rota ainda não chegou. */
 function Carregando() {
@@ -84,19 +100,23 @@ export default function App() {
     <AppProvider>
       <AdGateProvider>
         <BrowserRouter>
+          <RouteErrorBoundary>
           <Suspense fallback={<Carregando />}>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/privacidade" element={<PrivacidadePage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route element={<AdminProtectedRoute />}>
-                <Route path="/admin" element={<AdminVideosPage />} />
+              <Route path="/admin" element={<AdminProtectedRoute />}>
+                <Route index element={<AdminVideosPage />} />
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<DashboardPage />} />
                   <Route path="/produtor" element={<ProdutorPage />} />
                   <Route path="/calda" element={<CaldaOrganicaPage />} />
+                  <Route path="/custo-calda" element={<CustoCaldaPage />} />
+                  <Route path="/regulador" element={<ReguladorPage />} />
+                  <Route path="/calendario" element={<CalendarioPage />} />
                   <Route path="/insumos" element={<InsumosPage />} />
                   <Route path="/mao-de-obra" element={<MaoDeObraPage />} />
                   <Route path="/ciclo" element={<CicloCulturaPage />} />
@@ -107,6 +127,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
+          </RouteErrorBoundary>
         </BrowserRouter>
       </AdGateProvider>
     </AppProvider>

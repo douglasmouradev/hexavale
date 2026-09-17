@@ -12,8 +12,8 @@ export function PrivacidadePage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-svh bg-cream px-4 py-8">
-      <div className="mx-auto w-full max-w-lg space-y-5 pb-10">
+    <div className="min-h-svh bg-cream px-4 py-8 lg:px-10">
+      <div className="mx-auto w-full max-w-lg space-y-5 pb-10 lg:max-w-3xl">
         <div>
           <Wordmark height={32} className="mb-4" />
           <PageTitle
@@ -22,6 +22,7 @@ export function PrivacidadePage() {
           />
         </div>
 
+        <div className="grid gap-5 lg:grid-cols-2">
         {POLITICA_SECOES.map((secao) => (
           <Card key={secao.titulo} className="space-y-2">
             <h2 className="text-lg font-medium text-ink">{secao.titulo}</h2>
@@ -32,6 +33,7 @@ export function PrivacidadePage() {
             ))}
           </Card>
         ))}
+        </div>
 
         <Card className="space-y-1">
           <p className="text-sm font-medium text-ink">Contato</p>

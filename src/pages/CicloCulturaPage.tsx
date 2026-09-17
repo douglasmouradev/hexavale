@@ -22,7 +22,7 @@ import {
   totalSemana,
   totaisCiclo,
 } from '@/lib/ciclo'
-import { formatCurrency, parseDecimal } from '@/lib/format'
+import { cn, formatCurrency, parseDecimal } from '@/lib/format'
 import { exportarCicloPdf } from '@/lib/pdf'
 import { fecharSafraAtual, lerSafras, produtorAposFechar } from '@/lib/safra'
 import type { CicloCultura, MaoDeObraSemana, SafraArquivada, SemanaCiclo } from '@/types/models'
@@ -158,8 +158,17 @@ export function CicloCulturaPage() {
 
   return (
     <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2">
       <Card tone="field" className="space-y-4">
         <p className="text-sm font-medium text-mango-light">Safra · 42 semanas</p>
+        {produtor.cultura !== 'uva' ? (
+          <p className="text-sm text-white/80">
+            Caderno semanal.{' '}
+            <Link to="/calendario" className="text-mango-light underline decoration-mango-light/50">
+              Datas da mangueira
+            </Link>
+          </p>
+        ) : null}
         <p className="font-display text-2xl font-bold text-white">{formatCurrency(totais.geral)}</p>
         {alvo ? (
           <p className="text-sm text-white/80">
@@ -200,7 +209,9 @@ export function CicloCulturaPage() {
           />
         </Card>
       ) : null}
+      </div>
 
+      <div className="grid gap-4 lg:grid-cols-2">
       {fases.map((fase) => {
         const chave = chaveFase(fase.inicio, fase.fim)
         const daFase = semanas.filter(
@@ -212,7 +223,7 @@ export function CicloCulturaPage() {
         const ehAgora = chaveAlvo === chave
 
         return (
-          <Card key={chave} className="space-y-3 p-4">
+          <Card key={chave} className={cn('space-y-3 p-4', expandida && 'lg:col-span-2')}>
             <button
               type="button"
               className="flex w-full items-start justify-between gap-3 text-left"
@@ -254,6 +265,7 @@ export function CicloCulturaPage() {
           </Card>
         )
       })}
+      </div>
 
       <Button
         variant="secondary"

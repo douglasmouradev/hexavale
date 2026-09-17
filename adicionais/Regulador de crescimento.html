@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Regulador de Crescimento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg: #22362a;
+  --surface: #f7f2e4;
+  --ink: #262319;
+  --muted: #82795f;
+  --accent: #e08a1e;
+  --accent-ink: #4a2c05;
+  --leaf: #c3d3a0;
+  --line: #d9d0b4;
+  --danger: #a8452f;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(195,211,160,0.10), transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(224,138,30,0.08), transparent 40%);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: clamp(16px, 4vw, 48px);
+}
+
+.page{ max-width: 1080px; margin: 0 auto; }
+
+header{ margin-bottom: 28px; color: var(--surface); }
+header .kicker{ font-size: 13px; color: var(--leaf); margin: 0 0 6px 0; }
+header h1{
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: clamp(28px, 4vw, 38px);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+header p{ margin: 0; color: #cdd6c6; font-size: 15px; max-width: 62ch; line-height: 1.5; }
+
+.layout{
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 860px){ .layout{ grid-template-columns: 1fr; } }
+
+.card{
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15), 0 12px 30px rgba(0,0,0,0.18);
+}
+.card h2{
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 19px;
+  margin: 0 0 4px 0;
+}
+.card .card-sub{ font-size: 12.5px; color: var(--muted); margin: 0 0 14px 0; }
+.card + .card{ margin-top: 20px; }
+
+.talhao-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+@media (max-width: 700px){ .talhao-grid{ grid-template-columns: 1fr 1fr; } }
+
+.field label{
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.field input{
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fffdf8;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+}
+.field input:focus{
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+.field.readonly input{ background: var(--surface); color: var(--muted); }
+
+.table-wrap{ overflow-x: auto; margin-top: 6px; }
+table{ width: 100%; border-collapse: collapse; min-width: 720px; }
+th{
+  text-align: left;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 8px 8px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+td{
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+td input{
+  width: 88px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fffdf8;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+td input.f-nome{ width: 150px; }
+td input:focus{
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+.col-total{ font-variant-numeric: tabular-nums; font-weight: 600; }
+.col-remove{ width: 28px; text-align: center; }
+
+.link-btn{
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.link-btn:hover{ color: var(--danger); }
+
+.add-row-btn{
+  margin-top: 12px;
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.add-row-btn:hover{ border-color: var(--accent); color: var(--accent-ink); }
+
+.tfoot-row td{ border-bottom: none; padding-top: 12px; font-weight: 600; }
+
+.kpi{
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.kpi:first-of-type{ border-top: none; padding-top: 0; }
+.kpi .kpi-label{ font-size: 12.5px; color: var(--muted); }
+.kpi .kpi-value{
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  margin-top: 2px;
+}
+.kpi.highlight .kpi-value{ color: var(--accent-ink); }
+.kpi .kpi-sub{ font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.chart-title{ font-size: 12.5px; color: var(--muted); margin: 0 0 10px 0; }
+.chart-canvas-wrap{ position: relative; height: 200px; }
+.empty-note{ color: var(--muted); font-size: 14px; padding: 8px 0 2px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <p class="kicker">Vale do São Francisco</p>
+    <h1>Regulador de crescimento</h1>
+    <p>Informe o talhão e o número de plantas por porte. O calendário calcula o volume de cada insumo (em litros) e o custo total, conforme a dosagem por planta em cada porte.</p>
+  </header>
+
+  <div class="layout">
+
+    <div>
+      <div class="card">
+        <h2>Talhão</h2>
+        <p class="card-sub">Distribua as plantas por porte para calcular a dosagem correta de cada uma.</p>
+        <div class="talhao-grid">
+          <div class="field">
+            <label for="areaHa">Área (ha)</label>
+            <input type="number" id="areaHa" min="0" step="any">
+          </div>
+          <div class="field">
+            <label for="plantasMaior">Plantas maiores</label>
+            <input type="number" id="plantasMaior" min="0">
+          </div>
+          <div class="field">
+            <label for="plantasMedia">Plantas médias</label>
+            <input type="number" id="plantasMedia" min="0">
+          </div>
+          <div class="field">
+            <label for="plantasMenor">Plantas menores</label>
+            <input type="number" id="plantasMenor" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Insumos e dosagens</h2>
+        <p class="card-sub">Dosagem em mL por planta, para cada porte.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Maior (mL/pl)</th>
+                <th>Média (mL/pl)</th>
+                <th>Menor (mL/pl)</th>
+                <th>Valor (R$/L)</th>
+                <th>Volume (L)</th>
+                <th>Total (R$)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="insumosBody"></tbody>
+            <tfoot>
+              <tr class="tfoot-row">
+                <td>Total</td>
+                <td></td><td></td><td></td><td></td>
+                <td id="footVol">0 L</td>
+                <td id="footTotal">R$ 0,00</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <button class="add-row-btn" id="addRowBtn" type="button">+ Adicionar insumo</button>
+      </div>
+
+      <div class="card">
+        <h2>Gráfico</h2>
+        <p class="chart-title">Participação de cada insumo no custo total</p>
+        <div class="chart-canvas-wrap"><canvas id="costChart"></canvas></div>
+        <p class="empty-note" id="chartEmpty" style="display:none;">Adicione insumos para ver o gráfico.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Resultado</h2>
+      <div id="kpis"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'regulador-crescimento-receita';
+
+let state = {
+  areaHa: 2,
+  plantasMaior: 1000,
+  plantasMedia: 700,
+  plantasMenor: 300,
+  insumos: [
+    { id: uid(), nome: 'Paclo BR', dosMaior: 30, dosMedia: 25, dosMenor: 20, valorUnit: 48.00 },
+    { id: uid(), nome: 'Ácido Fúlvico', dosMaior: 20, dosMedia: 20, dosMenor: 20, valorUnit: 9.90 }
+  ]
+};
+
+function uid(){ return 'i' + Math.random().toString(36).slice(2,10); }
+
+function fmtBRL(n){ return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function fmtNum(n, decimals=0){ return n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }); }
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){ state = JSON.parse(res.value); return; }
+  }catch(e){ /* no saved state yet */ }
+  await persist();
+}
+async function persist(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+  catch(e){ console.error('Falha ao salvar', e); }
+}
+
+function renderTalhaoFields(){
+  document.getElementById('areaHa').value = state.areaHa;
+  document.getElementById('plantasMaior').value = state.plantasMaior;
+  document.getElementById('plantasMedia').value = state.plantasMedia;
+  document.getElementById('plantasMenor').value = state.plantasMenor;
+}
+
+function volumeL(dosMl, plantas){ return (dosMl * plantas) / 1000; }
+
+function renderTable(){
+  const body = document.getElementById('insumosBody');
+  body.innerHTML = '';
+  let totalVol = 0, totalValor = 0;
+
+  state.insumos.forEach(item => {
+    const vMaior = volumeL(item.dosMaior, state.plantasMaior);
+    const vMedia = volumeL(item.dosMedia, state.plantasMedia);
+    const vMenor = volumeL(item.dosMenor, state.plantasMenor);
+    const vTotal = vMaior + vMedia + vMenor;
+    const valorTotal = vTotal * item.valorUnit;
+    totalVol += vTotal;
+    totalValor += valorTotal;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="f-nome" value="${escapeAttr(item.nome)}"></td>
+      <td><input type="number" min="0" step="any" class="f-dm"></td>
+      <td><input type="number" min="0" step="any" class="f-dmed"></td>
+      <td><input type="number" min="0" step="any" class="f-dmen"></td>
+      <td><input type="number" min="0" step="any" class="f-valor"></td>
+      <td class="col-total">${fmtNum(vTotal, 2)} L</td>
+      <td class="col-total">${fmtBRL(valorTotal)}</td>
+      <td class="col-remove"><button class="link-btn remove-btn" type="button" title="Remover" aria-label="Remover insumo">×</button></td>
+    `;
+    tr.querySelector('.f-nome').value = item.nome;
+    tr.querySelector('.f-dm').value = item.dosMaior;
+    tr.querySelector('.f-dmed').value = item.dosMedia;
+    tr.querySelector('.f-dmen').value = item.dosMenor;
+    tr.querySelector('.f-valor').value = item.valorUnit;
+
+    tr.querySelector('.f-nome').addEventListener('input', e => { item.nome = e.target.value; persist(); renderResults(); });
+    tr.querySelector('.f-dm').addEventListener('input', e => { item.dosMaior = parseFloat(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+    tr.querySelector('.f-dmed').addEventListener('input', e => { item.dosMedia = parseFloat(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+    tr.querySelector('.f-dmen').addEventListener('input', e => { item.dosMenor = parseFloat(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+    tr.querySelector('.f-valor').addEventListener('input', e => { item.valorUnit = parseFloat(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+    tr.querySelector('.remove-btn').addEventListener('click', () => {
+      state.insumos = state.insumos.filter(x => x.id !== item.id);
+      persist(); renderTable(); renderResults();
+    });
+
+    body.appendChild(tr);
+  });
+
+  document.getElementById('footVol').textContent = fmtNum(totalVol, 2) + ' L';
+  document.getElementById('footTotal').textContent = fmtBRL(totalValor);
+}
+
+const CHART_COLORS = ['#e08a1e', '#6b8f5a', '#a8452f', '#c9a227', '#4a2c05', '#8aa77a', '#b56a3c', '#5d7a4f'];
+let costChart = null;
+
+function renderChart(items, totalValor){
+  const wrap = document.querySelector('.chart-canvas-wrap');
+  const emptyNote = document.getElementById('chartEmpty');
+
+  if(items.length === 0){
+    if(costChart){ costChart.destroy(); costChart = null; }
+    wrap.style.display = 'none';
+    emptyNote.style.display = 'block';
+    return;
+  }
+  wrap.style.display = 'block';
+  emptyNote.style.display = 'none';
+
+  const labels = items.map(i => i.nome);
+  const colors = items.map((_, idx) => CHART_COLORS[idx % CHART_COLORS.length]);
+  const data = items.map(i => i.valorTotal);
+
+  const ctx = document.getElementById('costChart').getContext('2d');
+  if(costChart){
+    costChart.data.labels = labels;
+    costChart.data.datasets[0].data = data;
+    costChart.data.datasets[0].backgroundColor = colors;
+    costChart.update();
+  } else {
+    costChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#f7f2e4', borderWidth: 2 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#262319', font: { family: 'Inter', size: 11 }, boxWidth: 10, padding: 10 } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+                const pct = total > 0 ? (ctx.parsed / total * 100) : 0;
+                return `${ctx.label}: ${fmtBRL(ctx.parsed)} (${fmtNum(pct,1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderResults(){
+  const totalPlantas = state.plantasMaior + state.plantasMedia + state.plantasMenor;
+
+  const items = state.insumos
+    .filter(i => (i.nome || '').trim() !== '')
+    .map(i => {
+      const vMaior = volumeL(i.dosMaior, state.plantasMaior);
+      const vMedia = volumeL(i.dosMedia, state.plantasMedia);
+      const vMenor = volumeL(i.dosMenor, state.plantasMenor);
+      const vTotal = vMaior + vMedia + vMenor;
+      return { nome: i.nome, vTotal, valorTotal: vTotal * i.valorUnit };
+    });
+
+  const totalVol = items.reduce((s,i) => s + i.vTotal, 0);
+  const totalValor = items.reduce((s,i) => s + i.valorTotal, 0);
+  const valorPorHa = state.areaHa > 0 ? totalValor / state.areaHa : 0;
+
+  let maiorParticipacao = null;
+  items.forEach(i => { if(!maiorParticipacao || i.valorTotal > maiorParticipacao.valorTotal) maiorParticipacao = i; });
+
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi highlight">
+      <div class="kpi-label">Custo total do talhão</div>
+      <div class="kpi-value">${fmtBRL(totalValor)}</div>
+      <div class="kpi-sub">${fmtNum(totalPlantas)} plantas ao todo</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Custo por hectare</div>
+      <div class="kpi-value">${fmtBRL(valorPorHa)}</div>
+      <div class="kpi-sub">para ${fmtNum(state.areaHa, state.areaHa % 1 === 0 ? 0 : 1)} ha</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Volume total de insumos</div>
+      <div class="kpi-value">${fmtNum(totalVol, 2)} L</div>
+    </div>
+    ${maiorParticipacao ? `
+    <div class="kpi">
+      <div class="kpi-label">Maior participação no custo</div>
+      <div class="kpi-value" style="font-size:17px;">${escapeHtml(maiorParticipacao.nome)}</div>
+      <div class="kpi-sub">${totalValor > 0 ? fmtNum(maiorParticipacao.valorTotal / totalValor * 100, 1) : 0}% do custo total</div>
+    </div>` : ''}
+  `;
+
+  renderChart(items, totalValor);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+document.getElementById('areaHa').addEventListener('input', e => { state.areaHa = parseFloat(e.target.value) || 0; persist(); renderResults(); });
+document.getElementById('plantasMaior').addEventListener('input', e => { state.plantasMaior = parseInt(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+document.getElementById('plantasMedia').addEventListener('input', e => { state.plantasMedia = parseInt(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+document.getElementById('plantasMenor').addEventListener('input', e => { state.plantasMenor = parseInt(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  state.insumos.push({ id: uid(), nome: '', dosMaior: 0, dosMedia: 0, dosMenor: 0, valorUnit: 0 });
+  persist();
+  renderTable();
+  renderResults();
+});
+
+(async function init(){
+  await loadState();
+  renderTalhaoFields();
+  renderTable();
+  renderResults();
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
+import { PageSplit } from '@/components/layout/PageSplit'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -155,8 +156,54 @@ export function InsumosPage() {
 
   return (
     <form className="space-y-5" onSubmit={handleCalculate}>
+      <PageSplit
+        aside={
+          linhas ? (
+            <Card className="space-y-3">
+              <GraficoPizza
+                centro={formatCurrency(total)}
+                formatValor={formatCurrency}
+                fatias={linhas.map((linha) => ({
+                  label: linha.nome,
+                  value: linha.custo,
+                  detalhe: formatNumberSafe(linha.quantidade),
+                }))}
+              />
+              {linhas.map((linha) => (
+                <div key={linha.nome} className="flex justify-between gap-3">
+                  <span className="font-medium text-ink">{linha.nome}</span>
+                  <span className="text-right text-field-dark">
+                    {formatNumberSafe(linha.quantidade)} · {formatCurrency(linha.custo)}
+                  </span>
+                </div>
+              ))}
+              <p className="text-lg font-bold text-ink">Total {formatCurrency(total)}</p>
+              {aviso ? <Banner>{aviso}</Banner> : null}
+              <Button type="button" full onClick={handleLancar}>
+                Lançar na semana atual
+              </Button>
+              {aviso.startsWith('Lançado') ? (
+                <Link to="/ciclo" className="block">
+                  <Button type="button" variant="outline" full>
+                    Ver no ciclo
+                  </Button>
+                </Link>
+              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                full
+                onClick={() => exportarInsumosPdf(linhas, total, propriedade, produtor)}
+              >
+                Exportar PDF
+              </Button>
+            </Card>
+          ) : null
+        }
+      >
       <Card className="space-y-3">
         <h2 className="text-lg font-bold text-ink">Plantas por porte</h2>
+        <div className="grid gap-3 lg:grid-cols-3">
         <Input
           label="Mudas / pequenas"
           name="P"
@@ -178,6 +225,7 @@ export function InsumosPage() {
           value={form.G}
           onChange={(event) => setForm({ ...form, G: event.target.value })}
         />
+        </div>
       </Card>
 
       <UsarCatalogo opcoes={catalogoInsumos} onEscolher={handleDoCatalogo} />
@@ -291,51 +339,10 @@ export function InsumosPage() {
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      {linhas ? (
-        <Card className="space-y-3">
-          <GraficoPizza
-            centro={formatCurrency(total)}
-            formatValor={formatCurrency}
-            fatias={linhas.map((linha) => ({
-              label: linha.nome,
-              value: linha.custo,
-              detalhe: formatNumberSafe(linha.quantidade),
-            }))}
-          />
-          {linhas.map((linha) => (
-            <div key={linha.nome} className="flex justify-between gap-3">
-              <span className="font-medium text-ink">{linha.nome}</span>
-              <span className="text-right text-field-dark">
-                {formatNumberSafe(linha.quantidade)} · {formatCurrency(linha.custo)}
-              </span>
-            </div>
-          ))}
-          <p className="text-lg font-bold text-ink">Total {formatCurrency(total)}</p>
-          {aviso ? <Banner>{aviso}</Banner> : null}
-          <Button type="button" full onClick={handleLancar}>
-            Lançar na semana atual
-          </Button>
-          {aviso.startsWith('Lançado') ? (
-            <Link to="/ciclo" className="block">
-              <Button type="button" variant="outline" full>
-                Ver no ciclo
-              </Button>
-            </Link>
-          ) : null}
-          <Button
-            type="button"
-            variant="secondary"
-            full
-            onClick={() => exportarInsumosPdf(linhas, total, propriedade, produtor)}
-          >
-            Exportar PDF
-          </Button>
-        </Card>
-      ) : null}
-
       <Button type="submit" full>
         Calcular
       </Button>
+      </PageSplit>
     </form>
   )
 }

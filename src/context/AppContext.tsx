@@ -52,6 +52,7 @@ function cicloTemCusto() {
 }
 
 function aplicarAmostraSeVazio(produtor: ConfigProdutor) {
+  if (!import.meta.env.DEV) return produtor
   if (amostraJaLancada()) return produtor
   if (cicloTemCusto()) {
     marcarAmostraLancada()
@@ -63,7 +64,7 @@ function aplicarAmostraSeVazio(produtor: ConfigProdutor) {
 function loadInitialState() {
   const propriedade = readStore<Propriedade>(STORAGE_KEYS.propriedade)
   let produtor = loadProdutor()
-  if (propriedade) {
+  if (propriedade && import.meta.env.DEV) {
     produtor = aplicarAmostraSeVazio(produtor)
   }
   return {
@@ -98,7 +99,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         writeStore(STORAGE_KEYS.propriedade, next)
         setPropriedade(next)
         setConsentimento(registrarConsentimento())
-        setProdutor(aplicarAmostraSeVazio(loadProdutor()))
+        setProdutor(
+          import.meta.env.DEV ? aplicarAmostraSeVazio(loadProdutor()) : loadProdutor(),
+        )
         return next
       },
       /** Sair tira só nome e telefone; o caderno permanece no aparelho. */

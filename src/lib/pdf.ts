@@ -4,6 +4,7 @@ import autoTable from 'jspdf-autotable'
 import { culturaLabel } from '@/data/modules'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { totalSemana } from '@/lib/ciclo'
+import { formatBrUtc, type VariedadeManga } from '@/lib/calendarioManga'
 import type { ResultadoCalda } from '@/lib/calda'
 import type { ConfigProdutor, Propriedade, SemanaCiclo, TotaisCiclo } from '@/types/models'
 
@@ -175,4 +176,64 @@ export function exportarCicloPdf(
     ],
   })
   doc.save(`ciclo-${new Date().toISOString().slice(0, 10)}.pdf`)
+}
+
+export function exportarCalendarioPdf(
+  variedade: VariedadeManga,
+  dataAlvo: string,
+  datas: Date[] | null,
+  custos: {
+    entries: { nome: string; etapa: string; offset: number; rTotal: number }[]
+    total: number
+    porPlanta: number
+    porHa: number
+  },
+  propriedade: Propriedade | null,
+  produtor: ConfigProdutor,
+) {
+  const doc = new jsPDF()
+  header(doc, `Calendario da mangueira - ${variedade.name}`, propriedade, produtor)
+  autoTable(doc, {
+    startY: 64,
+    theme: 'plain',
+    body: [
+      ['Variedade', variedade.name],
+      ['Talhao', variedade.talhao.nome || '-'],
+      ['Plantas', String(variedade.talhao.nPlantas)],
+      ['Area (ha)', String(variedade.talhao.areaHa)],
+      ['Colheita alvo', dataAlvo || '-'],
+    ],
+  })
+  if (datas?.length) {
+    autoTable(doc, {
+      startY: lastTableY(doc) + 8,
+      head: [['Etapa', 'Data', 'Dias do intervalo']],
+      body: variedade.stages.map((etapa, index) => [
+        etapa.name,
+        datas[index] ? formatBrUtc(datas[index]!) : '-',
+        etapa.days ? String(etapa.days) : 'partida',
+      ]),
+      headStyles: { fillColor: [31, 107, 58], textColor: 255 },
+    })
+  }
+  if (custos.entries.length) {
+    autoTable(doc, {
+      startY: lastTableY(doc) + 8,
+      head: [['Operacao', 'Intervalo', 'Dia', 'Custo']],
+      body: [
+        ...custos.entries.map((item) => [
+          item.nome,
+          item.etapa,
+          String(item.offset),
+          formatCurrency(item.rTotal),
+        ]),
+        ['Total', '', '', formatCurrency(custos.total)],
+        ['Por planta', '', '', formatCurrency(custos.porPlanta)],
+        ['Por hectare', '', '', formatCurrency(custos.porHa)],
+      ],
+      headStyles: { fillColor: [31, 107, 58], textColor: 255 },
+      styles: { fontSize: 8 },
+    })
+  }
+  doc.save(`calendario-manga-${new Date().toISOString().slice(0, 10)}.pdf`)
 }

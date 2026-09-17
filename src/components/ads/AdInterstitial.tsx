@@ -1,5 +1,5 @@
-/** Vídeo do anúncio; timer só corre com URL válida. */
-import { useEffect, useState } from 'react'
+/** Vídeo do anúncio; começa mudo para o navegador permitir autoplay. */
+import { useEffect, useRef, useState } from 'react'
 import { getAdPolicy, type AdPlacement } from '@/lib/ads'
 import { Button } from '@/components/ui/Button'
 
@@ -17,9 +17,19 @@ export function AdInterstitial({
   onComplete,
 }: AdInterstitialProps) {
   const policy = getAdPolicy(placement)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [secondsLeft, setSecondsLeft] = useState(policy.durationSeconds)
   const elapsed = policy.durationSeconds - secondsLeft
   const canSkip = elapsed >= policy.skipAfterSeconds
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+    el.muted = true
+    void el.play().catch(() => {
+      // Alguns navegadores ainda pedem um toque; o timer segue mesmo assim.
+    })
+  }, [videoUrl])
 
   useEffect(() => {
     if (secondsLeft <= 0) {
@@ -34,12 +44,12 @@ export function AdInterstitial({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/90 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/90 p-4 sm:items-center lg:p-8"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ad-title"
     >
-      <div className="flex w-full max-w-md flex-col overflow-hidden rounded-leaf bg-paper shadow-lift">
+      <div className="flex w-full max-w-md flex-col overflow-hidden rounded-leaf bg-paper shadow-lift lg:max-w-xl">
         <div className="border-b border-line bg-field px-4 py-2 text-sm font-medium text-white">
           Publicidade
         </div>
@@ -50,10 +60,13 @@ export function AdInterstitial({
           </h2>
 
           <video
+            ref={videoRef}
             src={videoUrl}
             className="aspect-video w-full rounded-leaf bg-ink"
             autoPlay
+            muted
             playsInline
+            preload="auto"
             controls={false}
             onEnded={() => {
               if (canSkip) onComplete()

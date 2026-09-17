@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
+import { PageSplit } from '@/components/layout/PageSplit'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -122,6 +123,48 @@ export function MaoDeObraPage() {
 
   return (
     <form className="space-y-5" onSubmit={handleCalculate}>
+      <PageSplit
+        aside={
+          linhas ? (
+            <Card className="space-y-3">
+              <GraficoPizza
+                centro={formatCurrency(total)}
+                formatValor={formatCurrency}
+                fatias={linhas.map((linha) => ({
+                  label: linha.nome,
+                  value: linha.custo,
+                }))}
+              />
+              {linhas.map((linha) => (
+                <div key={linha.nome} className="flex justify-between">
+                  <span className="font-medium text-ink">{linha.nome}</span>
+                  <span>{formatCurrency(linha.custo)}</span>
+                </div>
+              ))}
+              <p className="text-lg font-bold">Total {formatCurrency(total)}</p>
+              {aviso ? <Banner>{aviso}</Banner> : null}
+              <Button type="button" full onClick={handleLancar}>
+                Lançar na semana atual
+              </Button>
+              {aviso.startsWith('Lançado') ? (
+                <Link to="/ciclo" className="block">
+                  <Button type="button" variant="outline" full>
+                    Ver no ciclo
+                  </Button>
+                </Link>
+              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                full
+                onClick={() => exportarMaoDeObraPdf(linhas, total, propriedade, produtor)}
+              >
+                Exportar PDF
+              </Button>
+            </Card>
+          ) : null
+        }
+      >
       {atividades.map((atividade, index) => (
         <Card key={atividade.id} className="space-y-3">
           <div className="flex items-center justify-between">
@@ -205,48 +248,10 @@ export function MaoDeObraPage() {
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      {linhas ? (
-        <Card className="space-y-3">
-          <GraficoPizza
-            centro={formatCurrency(total)}
-            formatValor={formatCurrency}
-            fatias={linhas.map((linha) => ({
-              label: linha.nome,
-              value: linha.custo,
-            }))}
-          />
-          {linhas.map((linha) => (
-            <div key={linha.nome} className="flex justify-between">
-              <span className="font-medium text-ink">{linha.nome}</span>
-              <span>{formatCurrency(linha.custo)}</span>
-            </div>
-          ))}
-          <p className="text-lg font-bold">Total {formatCurrency(total)}</p>
-          {aviso ? <Banner>{aviso}</Banner> : null}
-          <Button type="button" full onClick={handleLancar}>
-            Lançar na semana atual
-          </Button>
-          {aviso.startsWith('Lançado') ? (
-            <Link to="/ciclo" className="block">
-              <Button type="button" variant="outline" full>
-                Ver no ciclo
-              </Button>
-            </Link>
-          ) : null}
-          <Button
-            type="button"
-            variant="secondary"
-            full
-            onClick={() => exportarMaoDeObraPdf(linhas, total, propriedade, produtor)}
-          >
-            Exportar PDF
-          </Button>
-        </Card>
-      ) : null}
-
       <Button type="submit" full>
         Calcular
       </Button>
+      </PageSplit>
     </form>
   )
 }

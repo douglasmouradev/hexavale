@@ -14,8 +14,8 @@ export function Metric({
       <p
         className={
           invert
-            ? 'mt-0.5 font-display text-xl font-bold text-white'
-            : 'mt-0.5 font-display text-xl font-bold text-field'
+            ? 'mt-0.5 font-display text-[1.35rem] font-semibold text-white'
+            : 'mt-0.5 font-display text-[1.35rem] font-semibold text-field'
         }
       >
         {value}

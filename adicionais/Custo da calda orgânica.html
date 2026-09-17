@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Custo da Calda Orgânica</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg: #22362a;
+  --surface: #f7f2e4;
+  --ink: #262319;
+  --muted: #82795f;
+  --accent: #e08a1e;
+  --accent-ink: #4a2c05;
+  --leaf: #c3d3a0;
+  --line: #d9d0b4;
+  --danger: #a8452f;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(195,211,160,0.10), transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(224,138,30,0.08), transparent 40%);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: clamp(16px, 4vw, 48px);
+}
+
+.page{ max-width: 1040px; margin: 0 auto; }
+
+header{ margin-bottom: 28px; color: var(--surface); }
+header .kicker{ font-size: 13px; color: var(--leaf); margin: 0 0 6px 0; }
+header h1{
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: clamp(28px, 4vw, 38px);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+header p{ margin: 0; color: #cdd6c6; font-size: 15px; max-width: 60ch; line-height: 1.5; }
+
+.layout{
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 800px){ .layout{ grid-template-columns: 1fr; } }
+
+.card{
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15), 0 12px 30px rgba(0,0,0,0.18);
+}
+.card h2{
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 19px;
+  margin: 0 0 14px 0;
+}
+.card + .card{ margin-top: 20px; }
+
+.tank-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 560px){ .tank-grid{ grid-template-columns: 1fr; } }
+
+.field label{
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.field input{
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fffdf8;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+}
+.field input:focus{
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+table{ width: 100%; border-collapse: collapse; margin-top: 16px; }
+th{
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 8px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+td{
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: middle;
+}
+td input{
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fffdf8;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+td input:focus{
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+.col-total{ white-space: nowrap; font-variant-numeric: tabular-nums; }
+.col-remove{ width: 28px; text-align: center; }
+
+.link-btn{
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.link-btn:hover{ color: var(--danger); }
+
+.add-row-btn{
+  margin-top: 12px;
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.add-row-btn:hover{ border-color: var(--accent); color: var(--accent-ink); }
+
+.tfoot-row td{ border-bottom: none; padding-top: 12px; font-weight: 600; }
+
+.kpi{
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.kpi:first-of-type{ border-top: none; padding-top: 0; }
+.kpi .kpi-label{ font-size: 12.5px; color: var(--muted); }
+.kpi .kpi-value{
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  margin-top: 2px;
+}
+.kpi.highlight .kpi-value{ color: var(--accent-ink); }
+.kpi .kpi-sub{ font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.charts-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 640px){ .charts-grid{ grid-template-columns: 1fr; } }
+
+.chart-title{
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0 0 10px 0;
+}
+.chart-canvas-wrap{
+  position: relative;
+  height: 220px;
+}
+.chart-canvas-wrap-tall{
+  height: auto;
+  min-height: 160px;
+}
+
+.empty-note{
+  color: var(--muted);
+  font-size: 14px;
+  padding: 8px 0 2px 0;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <p class="kicker">Vale do São Francisco</p>
+    <h1>Custo da calda orgânica</h1>
+    <p>Monte a receita do tanque, informe o volume aplicado por hectare e o número de aplicações do ciclo, e veja o custo por litro e por hectare.</p>
+  </header>
+
+  <div class="layout">
+
+    <div>
+      <div class="card">
+        <h2>Tanque e aplicação</h2>
+        <div class="tank-grid">
+          <div class="field">
+            <label for="tankVolume">Volume do tanque (L)</label>
+            <input type="number" id="tankVolume" min="0">
+          </div>
+          <div class="field">
+            <label for="volPerHa">Volume aplicado por hectare (L)</label>
+            <input type="number" id="volPerHa" min="0">
+          </div>
+          <div class="field">
+            <label for="numApps">Nº de aplicações no ciclo</label>
+            <input type="number" id="numApps" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Insumos</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th style="width:90px;">Qtd. (kg)</th>
+              <th style="width:110px;">Valor unit. (R$)</th>
+              <th style="width:100px;">Total (R$)</th>
+              <th class="col-remove"></th>
+            </tr>
+          </thead>
+          <tbody id="insumosBody"></tbody>
+          <tfoot>
+            <tr class="tfoot-row">
+              <td>Total</td>
+              <td id="footQtd">0</td>
+              <td></td>
+              <td id="footTotal">R$ 0,00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        <button class="add-row-btn" id="addRowBtn" type="button">+ Adicionar insumo</button>
+      </div>
+
+      <div class="card">
+        <h2>Gráficos</h2>
+        <div class="charts-grid">
+          <div class="chart-box">
+            <p class="chart-title">Participação no custo</p>
+            <div class="chart-canvas-wrap"><canvas id="costChart"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <p class="chart-title">Quantidade por insumo (kg)</p>
+            <div class="chart-canvas-wrap chart-canvas-wrap-tall"><canvas id="qtyChart"></canvas></div>
+          </div>
+        </div>
+        <p class="empty-note" id="chartsEmpty" style="display:none;">Adicione insumos para ver os gráficos.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Resultado</h2>
+      <div id="kpis"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'calda-organica-receita';
+
+let state = {
+  tankVolume: 10000,
+  volPerHa: 200,
+  numApps: 40,
+  insumos: [
+    { id: uid(), nome: 'Esterco', qtd: 150, valorUnit: 0.32 },
+    { id: uid(), nome: 'Farinha de ossos', qtd: 10, valorUnit: 1.00 },
+    { id: uid(), nome: 'Torta de mamona', qtd: 100, valorUnit: 2.00 },
+    { id: uid(), nome: 'Cinzas de madeira', qtd: 50, valorUnit: 1.20 },
+    { id: uid(), nome: 'Pó de rocha (Rochagem)', qtd: 100, valorUnit: 0.54 }
+  ]
+};
+
+function uid(){ return 'i' + Math.random().toString(36).slice(2,10); }
+
+function fmtBRL(n){
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmtNum(n, decimals=0){
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      state = JSON.parse(res.value);
+      return;
+    }
+  }catch(e){ /* no saved state yet, use default */ }
+  await persist();
+}
+
+async function persist(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){
+    console.error('Falha ao salvar receita', e);
+  }
+}
+
+function renderTankFields(){
+  document.getElementById('tankVolume').value = state.tankVolume;
+  document.getElementById('volPerHa').value = state.volPerHa;
+  document.getElementById('numApps').value = state.numApps;
+}
+
+function renderTable(){
+  const body = document.getElementById('insumosBody');
+  body.innerHTML = '';
+  state.insumos.forEach(item => {
+    const tr = document.createElement('tr');
+    const totalItem = item.qtd * item.valorUnit;
+    tr.innerHTML = `
+      <td><input type="text" class="f-nome" value="${escapeAttr(item.nome)}"></td>
+      <td><input type="number" min="0" step="any" class="f-qtd" value="${item.qtd}"></td>
+      <td><input type="number" min="0" step="any" class="f-valor" value="${item.valorUnit}"></td>
+      <td class="col-total">${fmtBRL(totalItem)}</td>
+      <td class="col-remove"><button class="link-btn remove-btn" type="button" title="Remover" aria-label="Remover insumo">×</button></td>
+    `;
+    tr.querySelector('.f-nome').addEventListener('input', e => { item.nome = e.target.value; persist(); renderResults(); });
+    tr.querySelector('.f-qtd').addEventListener('input', e => { item.qtd = parseFloat(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+    tr.querySelector('.f-valor').addEventListener('input', e => { item.valorUnit = parseFloat(e.target.value) || 0; persist(); renderTable(); renderResults(); });
+    tr.querySelector('.remove-btn').addEventListener('click', () => {
+      state.insumos = state.insumos.filter(x => x.id !== item.id);
+      persist(); renderTable(); renderResults();
+    });
+    body.appendChild(tr);
+  });
+
+  const totalQtd = state.insumos.reduce((s,i) => s + i.qtd, 0);
+  const totalValor = state.insumos.reduce((s,i) => s + i.qtd * i.valorUnit, 0);
+  document.getElementById('footQtd').textContent = fmtNum(totalQtd, 1);
+  document.getElementById('footTotal').textContent = fmtBRL(totalValor);
+}
+
+const CHART_COLORS = ['#e08a1e', '#6b8f5a', '#a8452f', '#c9a227', '#4a2c05', '#8aa77a', '#b56a3c', '#5d7a4f'];
+let costChart = null;
+let qtyChart = null;
+
+function renderCharts(){
+  const items = state.insumos.filter(i => (i.nome || '').trim() !== '' && (i.qtd > 0 || i.valorUnit > 0));
+  const chartsGrid = document.querySelector('.charts-grid');
+  const emptyNote = document.getElementById('chartsEmpty');
+
+  if(items.length === 0){
+    if(costChart){ costChart.destroy(); costChart = null; }
+    if(qtyChart){ qtyChart.destroy(); qtyChart = null; }
+    chartsGrid.style.display = 'none';
+    emptyNote.style.display = 'block';
+    return;
+  }
+  chartsGrid.style.display = 'grid';
+  emptyNote.style.display = 'none';
+
+  const labels = items.map(i => i.nome);
+  const colors = items.map((_, idx) => CHART_COLORS[idx % CHART_COLORS.length]);
+  const costData = items.map(i => i.qtd * i.valorUnit);
+  const qtyData = items.map(i => i.qtd);
+
+  const costCtx = document.getElementById('costChart').getContext('2d');
+  if(costChart){
+    costChart.data.labels = labels;
+    costChart.data.datasets[0].data = costData;
+    costChart.data.datasets[0].backgroundColor = colors;
+    costChart.update();
+  } else {
+    costChart = new Chart(costCtx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: costData, backgroundColor: colors, borderColor: '#f7f2e4', borderWidth: 2 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#262319', font: { family: 'Inter', size: 11 }, boxWidth: 10, padding: 10 } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+                const pct = total > 0 ? (ctx.parsed / total * 100) : 0;
+                return `${ctx.label}: ${fmtBRL(ctx.parsed)} (${fmtNum(pct,1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  const qtyCtx = document.getElementById('qtyChart').getContext('2d');
+  document.querySelector('.chart-canvas-wrap-tall').style.height = Math.max(160, items.length * 34) + 'px';
+  if(qtyChart){
+    qtyChart.data.labels = labels;
+    qtyChart.data.datasets[0].data = qtyData;
+    qtyChart.data.datasets[0].backgroundColor = colors;
+    qtyChart.update();
+  } else {
+    qtyChart = new Chart(qtyCtx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: qtyData, backgroundColor: colors, borderRadius: 3 }] },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => `${fmtNum(ctx.parsed.x, 1)} kg` } }
+        },
+        scales: {
+          x: { ticks: { color: '#82795f', font: { family: 'Inter', size: 11 } }, grid: { color: '#d9d0b4' } },
+          y: { ticks: { color: '#262319', font: { family: 'Inter', size: 11.5 } }, grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+function renderResults(){
+  const totalValor = state.insumos.reduce((s,i) => s + i.qtd * i.valorUnit, 0);
+  const totalQtd = state.insumos.reduce((s,i) => s + i.qtd, 0);
+  const valorLitro = state.tankVolume > 0 ? totalValor / state.tankVolume : 0;
+  const volumeCiclo = state.volPerHa * state.numApps;
+  const valorOperacao = valorLitro * volumeCiclo;
+
+  let maiorParticipacao = null, maiorVolume = null;
+  state.insumos.forEach(i => {
+    const t = i.qtd * i.valorUnit;
+    if(!maiorParticipacao || t > maiorParticipacao.t) maiorParticipacao = { nome: i.nome, t };
+    if(!maiorVolume || i.qtd > maiorVolume.qtd) maiorVolume = { nome: i.nome, qtd: i.qtd };
+  });
+
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi highlight">
+      <div class="kpi-label">Valor da operação (por hectare, no ciclo)</div>
+      <div class="kpi-value">${fmtBRL(valorOperacao)}</div>
+      <div class="kpi-sub">${fmtNum(volumeCiclo)} L aplicados no ciclo</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Custo total dos insumos</div>
+      <div class="kpi-value">${fmtBRL(totalValor)}</div>
+      <div class="kpi-sub">${fmtNum(totalQtd, 1)} kg de insumos no tanque</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Valor do litro da calda</div>
+      <div class="kpi-value">${fmtBRL(valorLitro)}</div>
+      <div class="kpi-sub">para um tanque de ${fmtNum(state.tankVolume)} L</div>
+    </div>
+    ${maiorParticipacao ? `
+    <div class="kpi">
+      <div class="kpi-label">Maior participação no custo</div>
+      <div class="kpi-value" style="font-size:17px;">${escapeHtml(maiorParticipacao.nome)}</div>
+      <div class="kpi-sub">${totalValor > 0 ? fmtNum(maiorParticipacao.t / totalValor * 100, 1) : 0}% do custo total</div>
+    </div>` : ''}
+    ${maiorVolume ? `
+    <div class="kpi">
+      <div class="kpi-label">Maior volume utilizado</div>
+      <div class="kpi-value" style="font-size:17px;">${escapeHtml(maiorVolume.nome)}</div>
+      <div class="kpi-sub">${fmtNum(maiorVolume.qtd, 1)} kg</div>
+    </div>` : ''}
+  `;
+
+  renderCharts();
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+document.getElementById('tankVolume').addEventListener('input', e => { state.tankVolume = parseFloat(e.target.value) || 0; persist(); renderResults(); });
+document.getElementById('volPerHa').addEventListener('input', e => { state.volPerHa = parseFloat(e.target.value) || 0; persist(); renderResults(); });
+document.getElementById('numApps').addEventListener('input', e => { state.numApps = parseFloat(e.target.value) || 0; persist(); renderResults(); });
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  state.insumos.push({ id: uid(), nome: '', qtd: 0, valorUnit: 0 });
+  persist();
+  renderTable();
+  renderResults();
+});
+
+(async function init(){
+  await loadState();
+  renderTankFields();
+  renderTable();
+  renderResults();
+})();
+</script>
+</body>
+</html>

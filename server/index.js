@@ -1,6 +1,7 @@
 /**
  * API HexaVale: login do admin, vídeos de propaganda e healthcheck.
  * Não recebe caderno, telefone nem nome do produtor.
+ * `npm start` (--app) entrega também a pasta dist (PWA + API no mesmo endereço).
  */
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -17,11 +18,60 @@ dotenv.config()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const uploadsDir = path.join(__dirname, 'uploads', 'videos')
+const distDir = path.join(__dirname, '..', 'dist')
 fs.mkdirSync(uploadsDir, { recursive: true })
 
+/** Um processo só: HTML do PWA + /api + /uploads. */
+const serveApp = process.argv.includes('--app')
 const PORT = Number(process.env.PORT || 3001)
-const JWT_SECRET = process.env.JWT_SECRET || 'hexa-manga-dev'
+const HOST = process.env.HOST || (serveApp ? '0.0.0.0' : '127.0.0.1')
 const TOKEN_HOURS = 12
+
+const JWT_EXEMPLO = new Set(['', 'hexa-manga-dev', 'troque-esta-chave-hexa-manga'])
+const SENHA_EXEMPLO = new Set(['', 'HexaAdmin123'])
+
+function jwtSecret() {
+  return String(process.env.JWT_SECRET || '')
+}
+
+function senhaAdminEnv() {
+  return String(process.env.ADMIN_PASSWORD || '')
+}
+
+function jwtFraco(secret) {
+  return JWT_EXEMPLO.has(secret) || secret.length < 16
+}
+
+function senhaFraca(senha) {
+  return SENHA_EXEMPLO.has(senha) || senha.length < 12
+}
+
+function recusarSegredosFracos() {
+  if (jwtFraco(jwtSecret())) {
+    console.error(
+      'Defina JWT_SECRET no .env com pelo menos 16 caracteres. Não use o valor de exemplo.',
+    )
+    process.exit(1)
+  }
+  if (senhaFraca(senhaAdminEnv())) {
+    console.error(
+      'Defina ADMIN_PASSWORD no .env com pelo menos 12 caracteres. Não use a senha de exemplo.',
+    )
+    process.exit(1)
+  }
+}
+
+if (serveApp) {
+  recusarSegredosFracos()
+  if (!fs.existsSync(path.join(distDir, 'index.html'))) {
+    console.error('Rode npm run build antes de npm start.')
+    process.exit(1)
+  }
+} else if (jwtFraco(jwtSecret()) || senhaFraca(senhaAdminEnv())) {
+  console.warn('JWT_SECRET ou ADMIN_PASSWORD ainda são de exemplo — use só em desenvolvimento.')
+}
+
+const JWT_SECRET = serveApp ? jwtSecret() : jwtSecret() || 'hexa-manga-dev'
 
 const dbName = process.env.MYSQL_DATABASE || 'hexa_manga'
 const dbConfig = {
@@ -112,22 +162,41 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `)
 
-  const [admins] = await pool.query('SELECT id FROM admins LIMIT 1')
+  const nome = process.env.ADMIN_NOME || 'Administrador'
+  const email = (process.env.ADMIN_EMAIL || 'admin@hexamanga.local').toLowerCase()
+  const senha = senhaAdminEnv() || (serveApp ? '' : 'HexaAdmin123')
+
+  if (serveApp && senhaFraca(senha)) {
+    recusarSegredosFracos()
+  }
+
+  const [admins] = await pool.query('SELECT id, senha_hash FROM admins LIMIT 1')
   if (admins.length === 0) {
-    const nome = process.env.ADMIN_NOME || 'Administrador'
-    const email = (process.env.ADMIN_EMAIL || 'admin@hexamanga.local').toLowerCase()
-    const senha = process.env.ADMIN_PASSWORD || 'HexaAdmin123'
     const senha_hash = await bcrypt.hash(senha, 10)
     await pool.query(
       'INSERT INTO admins (nome, email, senha_hash) VALUES (?, ?, ?)',
       [nome, email, senha_hash],
     )
     console.log(`Administrador inicial: ${email}`)
+    return
+  }
+
+  if (serveApp && (await bcrypt.compare('HexaAdmin123', admins[0].senha_hash))) {
+    const senha_hash = await bcrypt.hash(senha, 10)
+    await pool.query('UPDATE admins SET senha_hash = ?, email = ?, nome = ? WHERE id = ?', [
+      senha_hash,
+      email,
+      nome,
+      admins[0].id,
+    ])
+    console.log('Senha de exemplo do admin foi substituída pela ADMIN_PASSWORD do .env.')
   }
 }
 
 const app = express()
-app.use(cors({ origin: true }))
+if (!serveApp) {
+  app.use(cors({ origin: true }))
+}
 app.use(express.json())
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
@@ -136,7 +205,10 @@ app.get('/api/health', async (_req, res) => {
     await pool.query('SELECT 1')
     res.json({ ok: true })
   } catch (error) {
-    res.status(500).json({ ok: false, error: String(error.message || error) })
+    res.status(500).json({
+      ok: false,
+      error: serveApp ? 'Banco indisponível.' : String(error.message || error),
+    })
   }
 })
 
@@ -248,10 +320,30 @@ app.delete('/api/admin/videos/:id', authAdmin, async (req, res) => {
   res.json({ ok: true })
 })
 
+if (serveApp) {
+  app.use(express.static(distDir))
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      next()
+      return
+    }
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      next()
+      return
+    }
+    res.sendFile(path.join(distDir, 'index.html'))
+  })
+}
+
 ensureSchema()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`API Hexa Manga em http://127.0.0.1:${PORT}`)
+    app.listen(PORT, HOST, () => {
+      const local = `http://127.0.0.1:${PORT}`
+      if (serveApp) {
+        console.log(`Hexavale (app + API) em ${local}`)
+      } else {
+        console.log(`API Hexa Manga em ${local}`)
+      }
     })
   })
   .catch((error) => {

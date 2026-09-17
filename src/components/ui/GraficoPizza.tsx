@@ -109,7 +109,7 @@ export function GraficoPizza({
     >
       <svg
         viewBox="0 0 120 120"
-        className="h-52 w-52 shrink-0 touch-manipulation"
+        className="h-52 w-52 shrink-0 touch-manipulation lg:h-64 lg:w-64"
         role="img"
         aria-label="Toque numa fatia para ver o valor"
       >
@@ -144,7 +144,7 @@ export function GraficoPizza({
                   fill={tinta(fatia.cor)}
                   pointerEvents="none"
                   style={{
-                    fontFamily: '"Archivo Narrow", "Arial Narrow", sans-serif',
+                    fontFamily: '"Source Sans 3", "Segoe UI", sans-serif',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -174,7 +174,7 @@ export function GraficoPizza({
           textAnchor="middle"
           fill={invert ? '#fffcf7' : '#171411'}
           pointerEvents="none"
-          style={{ fontFamily: '"Archivo Narrow", "Arial Narrow", sans-serif' }}
+          style={{ fontFamily: '"Source Sans 3", "Segoe UI", sans-serif' }}
         >
           <tspan
             x={CX}
@@ -226,7 +226,7 @@ export function GraficoPizza({
                   style={{ background: fatia.cor }}
                 />
                 <span className="min-w-0 flex-1">{fatia.label}</span>
-                <span className="shrink-0 font-display text-sm tabular-nums tracking-tight">
+                <span className="shrink-0 text-sm font-semibold tabular-nums tracking-tight">
                   {fatia.percentual}%
                 </span>
               </button>

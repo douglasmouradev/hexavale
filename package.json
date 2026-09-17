@@ -8,11 +8,13 @@
     "server": "node --watch server/index.js",
     "dev:all": "concurrently -n web,api -c green,blue \"npm run dev\" \"npm run server\"",
     "build": "tsc -b && vite build",
+    "start": "node server/index.js --app",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:all": "concurrently -n web,api -c green,blue \"npm run preview\" \"npm run server\""
   },
   "dependencies": {
-    "@fontsource/archivo-narrow": "^5.3.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource/source-sans-3": "^5.3.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

@@ -26,6 +26,14 @@ export default defineConfig({
       '/uploads': 'http://127.0.0.1:3001',
     },
   },
+  preview: {
+    host: true,
+    allowedHosts: true,
+    proxy: {
+      '/api': 'http://127.0.0.1:3001',
+      '/uploads': 'http://127.0.0.1:3001',
+    },
+  },
   optimizeDeps: {
     holdUntilCrawlEnd: false,
     include: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'],

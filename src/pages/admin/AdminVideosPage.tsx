@@ -23,7 +23,7 @@ export function AdminVideosPage() {
 
   async function loadVideos() {
     const list = await adminRequest<AdVideo[]>('/api/admin/videos')
-    setVideos(list)
+    setVideos(Array.isArray(list) ? list : [])
   }
 
   useEffect(() => {
@@ -76,26 +76,28 @@ export function AdminVideosPage() {
   }
 
   return (
-    <div className="mx-auto min-h-svh max-w-lg bg-cream">
-      <header className="mb-5 flex items-center gap-3 bg-field px-4 py-4 text-white">
-        <Logo size={36} />
-        <div className="flex-1">
-          <h1 className="font-display text-xl font-bold">Propagandas</h1>
-          <p className="text-sm text-white/70">Vídeos do anúncio no app</p>
+    <div className="min-h-svh bg-cream">
+      <header className="bg-field text-white">
+        <div className="mx-auto flex w-full max-w-lg items-center gap-3 px-4 py-4 lg:max-w-5xl lg:px-8">
+          <Logo size={36} />
+          <div className="flex-1">
+            <h1 className="font-display text-xl font-bold">Propagandas</h1>
+            <p className="text-sm text-white/70">Vídeos do anúncio no app</p>
+          </div>
+          <button
+            type="button"
+            className="text-sm font-medium text-mango-light"
+            onClick={() => {
+              clearAdminToken()
+              navigate('/admin/login', { replace: true })
+            }}
+          >
+            Sair
+          </button>
         </div>
-        <button
-          type="button"
-          className="text-sm font-medium text-mango-light"
-          onClick={() => {
-            clearAdminToken()
-            navigate('/admin/login', { replace: true })
-          }}
-        >
-          Sair
-        </button>
       </header>
 
-      <div className="px-4 pb-8">
+      <div className="mx-auto max-w-lg px-4 py-5 pb-8 lg:grid lg:max-w-5xl lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8">
 
       <form className="space-y-4" onSubmit={handleUpload}>
         <Card className="space-y-4">
@@ -122,7 +124,7 @@ export function AdminVideosPage() {
         </Card>
       </form>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 space-y-3 lg:mt-0">
         {videos.length === 0 ? (
           <p className="text-sm text-soil">Nenhum vídeo ainda. O app mostra a tela de espera até você enviar o primeiro.</p>
         ) : null}
@@ -149,7 +151,7 @@ export function AdminVideosPage() {
 
       <Link
         to="/privacidade"
-        className="mt-6 block pb-6 text-center text-sm text-field"
+        className="mt-6 block pb-6 text-center text-sm text-field lg:col-span-2"
       >
         Privacidade
       </Link>

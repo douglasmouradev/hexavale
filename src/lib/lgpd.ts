@@ -24,6 +24,9 @@ export interface PacoteTitular {
   ciclo: unknown
   catalogo: unknown
   safras: unknown
+  custoCalda: unknown
+  regulador: unknown
+  calendario: unknown
 }
 
 export function lerConsentimento(): ConsentimentoLgpd | null {
@@ -58,6 +61,9 @@ export function coletarDadosTitular(): PacoteTitular {
     ciclo: readStore(STORAGE_KEYS.ciclo),
     catalogo: readStore(STORAGE_KEYS.catalogo),
     safras: readStore(STORAGE_KEYS.safras),
+    custoCalda: readStore(STORAGE_KEYS.custoCalda),
+    regulador: readStore(STORAGE_KEYS.regulador),
+    calendario: readStore(STORAGE_KEYS.calendario),
   }
 }
 
@@ -102,7 +108,10 @@ export function parsePacoteTitular(raw: unknown): PacoteTitular | null {
     'insumos' in raw ||
     'maoDeObra' in raw ||
     'catalogo' in raw ||
-    'safras' in raw
+    'safras' in raw ||
+    'custoCalda' in raw ||
+    'regulador' in raw ||
+    'calendario' in raw
   if (!temCaderno) return null
   return {
     geradoEm: typeof raw.geradoEm === 'string' ? raw.geradoEm : new Date().toISOString(),
@@ -117,6 +126,9 @@ export function parsePacoteTitular(raw: unknown): PacoteTitular | null {
     ciclo: raw.ciclo ?? null,
     catalogo: raw.catalogo ?? null,
     safras: raw.safras ?? null,
+    custoCalda: raw.custoCalda ?? null,
+    regulador: raw.regulador ?? null,
+    calendario: raw.calendario ?? null,
   }
 }
 
@@ -129,6 +141,9 @@ export function restaurarDadosTitular(pacote: PacoteTitular) {
   if (pacote.ciclo) writeStore(STORAGE_KEYS.ciclo, pacote.ciclo)
   if (pacote.catalogo) writeStore(STORAGE_KEYS.catalogo, pacote.catalogo)
   if (pacote.safras) writeStore(STORAGE_KEYS.safras, pacote.safras)
+  if (pacote.custoCalda) writeStore(STORAGE_KEYS.custoCalda, pacote.custoCalda)
+  if (pacote.regulador) writeStore(STORAGE_KEYS.regulador, pacote.regulador)
+  if (pacote.calendario) writeStore(STORAGE_KEYS.calendario, pacote.calendario)
   if (pacote.consentimento) writeStore(STORAGE_KEYS.consentimento, pacote.consentimento)
 }
 

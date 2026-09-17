@@ -42,7 +42,7 @@ export interface AdVideo {
 /** Pedido do vídeo atual — sem telefone, nome ou caderno do produtor. */
 export async function fetchCurrentAd() {
   try {
-    const response = await fetch('/api/ads/atual')
+    const response = await fetch(`/api/ads/atual?t=${Date.now()}`, { cache: 'no-store' })
     const tipo = response.headers.get('content-type') || ''
     if (!response.ok || !tipo.includes('application/json')) return null
     const data = (await response.json()) as { id: number; titulo: string; url: string }

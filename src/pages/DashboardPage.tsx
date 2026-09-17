@@ -13,7 +13,6 @@ import { STORAGE_KEYS } from '@/data/constants'
 import { MODULE_GROUPS, culturaLabel, modulesVisiveis } from '@/data/modules'
 import { lancarItensDeTeste } from '@/lib/amostra'
 import { gerarSemanasCiclo, mesclarSemanas, semanaHoje, totaisCiclo } from '@/lib/ciclo'
-import { temCopiaPendente } from '@/lib/copia'
 import { formatCurrency } from '@/lib/format'
 import { lerSafras } from '@/lib/safra'
 import { readStore } from '@/storage/localStore'
@@ -61,7 +60,6 @@ export function DashboardPage() {
   const visiveis = modulesVisiveis(produtor.cultura)
   const atalhos = visiveis.filter((module) => !BOTTOM_NAV_PATHS.includes(module.to))
   const precisaSetup = !produtor.cultura || !temData
-  const avisarCopia = temCopiaPendente()
 
   return (
     <div className="space-y-5">
@@ -160,17 +158,6 @@ export function DashboardPage() {
         <div className="space-y-5 lg:col-span-2">
           <InstalarAppCard />
 
-          {avisarCopia ? (
-            <Link to="/meus-dados" className="block">
-              <Card>
-                <p className="font-medium text-field">Faça uma cópia do caderno</p>
-                <p className="mt-0.5 text-sm text-soil">
-                  Os custos ficam só neste aparelho. Exporte um JSON em Meus dados.
-                </p>
-              </Card>
-            </Link>
-          ) : null}
-
           {ultimaSafra ? (
             <Link to="/ciclo" className="block">
               <Card>
@@ -223,11 +210,9 @@ export function DashboardPage() {
         As ferramentas estão no menu à esquerda.
       </p>
 
-      {import.meta.env.DEV ? (
-        <Button variant="outline" full onClick={aplicarTeste}>
-          Lançar itens de teste
-        </Button>
-      ) : null}
+      <Button variant="outline" full onClick={aplicarTeste}>
+        Lançar itens de teste
+      </Button>
 
       <Link to="/meus-dados" className="block desk:hidden">
         <Card>

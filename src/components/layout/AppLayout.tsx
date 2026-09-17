@@ -1,12 +1,24 @@
 /** Casca do produtor: topo, conteúdo, navegação e o aviso LGPD se faltar aceite. */
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { CadernoAviso } from '@/components/layout/CadernoAviso'
 import { Header } from '@/components/layout/Header'
 import { SideNav } from '@/components/layout/SideNav'
 import { ConsentGate } from '@/components/lgpd/ConsentGate'
+import { useAds } from '@/context/AdContext'
+import { adSessaoJaMostrada, marcarAdSessao } from '@/lib/ads'
 
 export function AppLayout() {
+  const { showInterstitial } = useAds()
+
+  useEffect(() => {
+    if (adSessaoJaMostrada()) return
+    void showInterstitial('login').then((mostrou) => {
+      if (mostrou) marcarAdSessao()
+    })
+  }, [showInterstitial])
+
   return (
     <div className="mx-auto flex min-h-svh max-w-lg flex-col bg-cream desk:mx-0 desk:max-w-none desk:flex-row">
       <SideNav />

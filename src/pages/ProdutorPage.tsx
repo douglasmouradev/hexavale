@@ -1,7 +1,5 @@
 /** Cultura, área (ha) e datas que montam as 42 semanas. */
 import { useState, type FormEvent } from 'react'
-import { format, parseISO } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -12,12 +10,8 @@ import { PageTitle } from '@/components/ui/PageTitle'
 import { useApp } from '@/context/AppContext'
 import { CICLO_SEMANAS } from '@/data/constants'
 import { gerarSemanasCiclo } from '@/lib/ciclo'
-import { cn } from '@/lib/format'
+import { cn, formatDiaPorExtenso } from '@/lib/format'
 import type { Cultura } from '@/types/models'
-
-function formatDate(iso: string) {
-  return format(parseISO(iso), "dd 'de' MMM yyyy", { locale: ptBR })
-}
 
 export function ProdutorPage() {
   const { produtor, salvarProdutor } = useApp()
@@ -123,8 +117,8 @@ export function ProdutorPage() {
         <Card className="bg-field/10">
           <p className="text-sm font-bold text-field-dark">Prévia do ciclo de {CICLO_SEMANAS} semanas</p>
           <p className="mt-2 text-sm leading-relaxed text-soil">
-            Semana 1: {formatDate(primeiraSemana.dataInicio)} a {formatDate(primeiraSemana.dataFim)}.
-            Semana {CICLO_SEMANAS}: {formatDate(ultimaSemana.dataInicio)} a {formatDate(ultimaSemana.dataFim)}.
+            Semana 1: {formatDiaPorExtenso(primeiraSemana.dataInicio)} a {formatDiaPorExtenso(primeiraSemana.dataFim)}.
+            Semana {CICLO_SEMANAS}: {formatDiaPorExtenso(ultimaSemana.dataInicio)} a {formatDiaPorExtenso(ultimaSemana.dataFim)}.
           </p>
         </Card>
       ) : null}

@@ -4,8 +4,11 @@
  */
 import { STORAGE_KEYS } from '@/data/constants'
 import { calcularCalda } from '@/lib/calda'
+import { palmerPadrao } from '@/lib/calendarioManga'
 import { gerarSemanasCiclo } from '@/lib/ciclo'
+import { calcularCustoCalda } from '@/lib/custoCalda'
 import { createId } from '@/lib/id'
+import { calcularRegulador } from '@/lib/regulador'
 import { readStore, writeStore } from '@/storage/localStore'
 import type {
   CatalogoCaderno,
@@ -30,8 +33,8 @@ export function lancarItensDeTeste(atual: ConfigProdutor): ConfigProdutor {
   const produtor: ConfigProdutor = {
     cultura: atual.cultura ?? 'manga',
     areaHectares: atual.areaHectares || '12',
-    dataReferencia: atual.dataReferencia || '2026-07-23',
-    dataColheita: atual.dataColheita,
+    dataReferencia: atual.dataReferencia || '2026-02-25',
+    dataColheita: atual.dataColheita || '2026-12-15',
   }
 
   const ureia = id()
@@ -250,6 +253,79 @@ export function lancarItensDeTeste(atual: ConfigProdutor): ConfigProdutor {
     atualizadoEm: new Date().toISOString(),
   })
   writeStore(STORAGE_KEYS.produtor, produtor)
+
+  const insumosCusto = [
+    { id: id(), nome: 'Esterco', qtd: 150, valorUnit: 0.32 },
+    { id: id(), nome: 'Farinha de ossos', qtd: 10, valorUnit: 1 },
+    { id: id(), nome: 'Torta de mamona', qtd: 100, valorUnit: 2 },
+    { id: id(), nome: 'Cinzas', qtd: 50, valorUnit: 1.2 },
+    { id: id(), nome: 'Pó de rocha', qtd: 100, valorUnit: 0.54 },
+  ]
+  writeStore(STORAGE_KEYS.custoCalda, {
+    tankVolume: '10000',
+    volPerHa: '200',
+    numApps: '40',
+    insumos: insumosCusto.map((item) => ({
+      id: item.id,
+      nome: item.nome,
+      qtd: String(item.qtd).replace('.', ','),
+      valorUnit: String(item.valorUnit).replace('.', ','),
+    })),
+    resultado: calcularCustoCalda({
+      tankVolume: 10000,
+      volPerHa: 200,
+      numApps: 40,
+      insumos: insumosCusto,
+    }),
+  })
+
+  const insumosRegulador = [
+    {
+      id: id(),
+      nome: 'Paclo BR',
+      dosMaior: 30,
+      dosMedia: 25,
+      dosMenor: 20,
+      valorUnit: 48,
+    },
+    {
+      id: id(),
+      nome: 'Ácido fúlvico',
+      dosMaior: 20,
+      dosMedia: 20,
+      dosMenor: 20,
+      valorUnit: 9.9,
+    },
+  ]
+  writeStore(STORAGE_KEYS.regulador, {
+    areaHa: '12',
+    plantasMaior: '400',
+    plantasMedia: '120',
+    plantasMenor: '80',
+    insumos: insumosRegulador.map((item) => ({
+      id: item.id,
+      nome: item.nome,
+      dosMaior: String(item.dosMaior),
+      dosMedia: String(item.dosMedia),
+      dosMenor: String(item.dosMenor),
+      valorUnit: String(item.valorUnit).replace('.', ','),
+    })),
+    resultado: calcularRegulador({
+      areaHa: 12,
+      plantasMaior: 400,
+      plantasMedia: 120,
+      plantasMenor: 80,
+      insumos: insumosRegulador,
+    }),
+  })
+
+  const palmer = palmerPadrao()
+  writeStore(STORAGE_KEYS.calendario, {
+    dataAlvo: produtor.dataColheita,
+    variedades: [palmer],
+    selecionadaId: palmer.id,
+  })
+
   marcarAmostraLancada()
   return produtor
 }

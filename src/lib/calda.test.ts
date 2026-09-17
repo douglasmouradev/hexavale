@@ -54,9 +54,9 @@ describe('parseCaldaCampos', () => {
     })
   })
 
-  it('aceita vírgula decimal', () => {
+  it('aceita vírgula decimal e ponto de milhar', () => {
     expect(
-      parseCaldaCampos({ tanqueLitros: '2000', areaHectares: '1,5', litrosPorHectare: '400' }),
+      parseCaldaCampos({ tanqueLitros: '2.000', areaHectares: '1,5', litrosPorHectare: '400' }),
     ).toEqual({
       tanqueLitros: 2000,
       areaHectares: 1.5,

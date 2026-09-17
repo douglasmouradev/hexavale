@@ -18,6 +18,7 @@ const POLICIES: Record<AdPlacement, InterstitialPolicy> = {
 }
 
 const AD_LAST_SHOWN_KEY = 'hexa-manga:ad-last-shown'
+const AD_SESSAO_KEY = 'hexavale:ad-sessao'
 /** 15 minutos: no pomar o cálculo não pode parar a cada toque. */
 const AD_COOLDOWN_MS = 15 * 60 * 1000
 
@@ -32,4 +33,28 @@ export function adEmCooldown() {
 
 export function marcarAdExibido() {
   localStorage.setItem(AD_LAST_SHOWN_KEY, String(Date.now()))
+}
+
+export function adSessaoJaMostrada() {
+  try {
+    return sessionStorage.getItem(AD_SESSAO_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function marcarAdSessao() {
+  try {
+    sessionStorage.setItem(AD_SESSAO_KEY, '1')
+  } catch {
+    /* aparelho sem sessionStorage */
+  }
+}
+
+export function limparAdSessao() {
+  try {
+    sessionStorage.removeItem(AD_SESSAO_KEY)
+  } catch {
+    /* aparelho sem sessionStorage */
+  }
 }

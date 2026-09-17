@@ -25,11 +25,14 @@ export function AdInterstitial({
   useEffect(() => {
     const el = videoRef.current
     if (!el) return
-    el.muted = true
+    el.muted = placement !== 'login'
     void el.play().catch(() => {
-      // Alguns navegadores ainda pedem um toque; o timer segue mesmo assim.
+      el.muted = true
+      void el.play().catch(() => {
+        // Timer segue mesmo se o autoplay falhar.
+      })
     })
-  }, [videoUrl])
+  }, [placement, videoUrl])
 
   useEffect(() => {
     if (secondsLeft <= 0) {
@@ -61,10 +64,11 @@ export function AdInterstitial({
 
           <video
             ref={videoRef}
+            key={videoUrl}
             src={videoUrl}
             className="aspect-video w-full rounded-leaf bg-ink"
             autoPlay
-            muted
+            muted={placement !== 'login'}
             playsInline
             preload="auto"
             controls={false}

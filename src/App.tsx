@@ -6,6 +6,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { AtualizarApp } from '@/components/pwa/AtualizarApp'
 import { AdminProtectedRoute } from '@/components/routes/AdminProtectedRoute'
 import { ProtectedRoute } from '@/components/routes/ProtectedRoute'
 import { RouteErrorBoundary } from '@/components/routes/RouteErrorBoundary'
@@ -100,6 +101,7 @@ export default function App() {
     <AppProvider>
       <AdGateProvider>
         <BrowserRouter>
+          <AtualizarApp />
           <RouteErrorBoundary>
           <Suspense fallback={<Carregando />}>
             <Routes>

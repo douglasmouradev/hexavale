@@ -173,7 +173,7 @@ async function ensureSchema() {
     recusarSegredosFracos()
   }
 
-  const [admins] = await pool.query('SELECT id, senha_hash FROM admins LIMIT 1')
+  const [admins] = await pool.query('SELECT id, email, senha_hash FROM admins LIMIT 1')
   if (admins.length === 0) {
     const senha_hash = await bcrypt.hash(senha, 10)
     await pool.query(
@@ -184,15 +184,18 @@ async function ensureSchema() {
     return
   }
 
-  if (serveApp && (await bcrypt.compare('HexaAdmin123', admins[0].senha_hash))) {
+  const atual = admins[0]
+  const mesmaSenha = await bcrypt.compare(senha, atual.senha_hash)
+  const senhaAntigaExemplo = await bcrypt.compare('HexaAdmin123', atual.senha_hash)
+  if (serveApp && (!mesmaSenha || atual.email !== email || senhaAntigaExemplo)) {
     const senha_hash = await bcrypt.hash(senha, 10)
     await pool.query('UPDATE admins SET senha_hash = ?, email = ?, nome = ? WHERE id = ?', [
       senha_hash,
       email,
       nome,
-      admins[0].id,
+      atual.id,
     ])
-    console.log('Senha de exemplo do admin foi substituída pela ADMIN_PASSWORD do .env.')
+    console.log('Administrador atualizado a partir do .env.')
   }
 }
 

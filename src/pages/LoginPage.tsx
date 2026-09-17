@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { formatPhone, isValidPhone } from '@/lib/format'
+import { marcarAdSessao } from '@/lib/ads'
 
 export function LoginPage() {
   const { propriedade, login } = useApp()
@@ -45,12 +46,13 @@ export function LoginPage() {
 
     setSubmitting(true)
     loginEmCurso.current = true
-    login({ telefone, nome })
     try {
-      await showInterstitial('login')
+      const mostrou = await showInterstitial('login')
+      if (mostrou) marcarAdSessao()
     } catch {
       // Segue mesmo se o anúncio não abrir.
     }
+    login({ telefone, nome })
     navigate('/', { replace: true })
   }
 

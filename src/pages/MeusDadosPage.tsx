@@ -8,7 +8,7 @@ import { PageTitle } from '@/components/ui/PageTitle'
 import { Row } from '@/components/ui/Row'
 import { useApp } from '@/context/AppContext'
 import { POLITICA_VERSAO } from '@/data/lgpd'
-import { baixarDadosTitular, lerArquivoPacote, type PacoteTitular } from '@/lib/lgpd'
+import { baixarDadosTitular, compartilharDadosTitular, lerArquivoPacote, type PacoteTitular } from '@/lib/lgpd'
 import { formatPhone } from '@/lib/format'
 
 function formatQuando(iso: string | undefined) {
@@ -113,6 +113,9 @@ export function MeusDadosPage() {
         </Button>
         <Button full variant="secondary" onClick={() => baixarDadosTitular()}>
           Exportar cópia (JSON)
+        </Button>
+        <Button full variant="outline" onClick={() => void compartilharDadosTitular()}>
+          Compartilhar cópia
         </Button>
         <input
           ref={fileRef}

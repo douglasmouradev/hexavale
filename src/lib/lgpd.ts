@@ -90,6 +90,36 @@ export function baixarDadosTitular() {
   marcarCopiaFeita()
 }
 
+/** No celular, abre o compartilhar do sistema; no computador, baixa o JSON. */
+export async function compartilharDadosTitular() {
+  const pacote = coletarDadosTitular()
+  const dia = new Date().toISOString().slice(0, 10)
+  const nome = `hexavale-meus-dados-${dia}.json`
+  const texto = JSON.stringify(pacote, null, 2)
+  const blob = new Blob([texto], { type: 'application/json' })
+  const arquivo = new File([blob], nome, { type: 'application/json' })
+  try {
+    const nav = navigator as Navigator & {
+      canShare?: (data: ShareData) => boolean
+    }
+    if (typeof navigator.share === 'function') {
+      const comArquivo: ShareData = { title: 'Cópia do caderno Hexavale', files: [arquivo] }
+      if (!nav.canShare || nav.canShare(comArquivo)) {
+        await navigator.share(comArquivo)
+        marcarCopiaFeita()
+        return true
+      }
+      await navigator.share({ title: 'Cópia do caderno Hexavale', text: texto })
+      marcarCopiaFeita()
+      return true
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return false
+  }
+  baixarDadosTitular()
+  return true
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }

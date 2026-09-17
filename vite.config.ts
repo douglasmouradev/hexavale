@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      html2canvas: fileURLToPath(new URL('./src/lib/html2canvas-stub.ts', import.meta.url)),
     },
   },
   server: {
@@ -42,8 +43,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      registerType: 'prompt',
+      injectRegister: false,
       devOptions: { enabled: false },
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brand/*', 'icons/*.png'],
       manifest: {
@@ -81,6 +82,16 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /\/uploads\//,
+            handler: 'NetworkOnly',
+          },
+        ],
       },
     }),
   ],

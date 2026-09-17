@@ -2,13 +2,24 @@
  * Calendário da safra: 42 semanas a partir do manejo ou de trás da colheita.
  * Custos lançados ficam nas semanas; as datas mudam sem apagar o que já entrou.
  */
-import { addDays, formatISO, parseISO, startOfDay } from 'date-fns'
 import { CICLO_SEMANAS } from '@/data/constants'
 import { sugestaoSemana } from '@/data/fenologia'
 import type { Cultura, SemanaCiclo, TotaisCiclo } from '@/types/models'
 
-function toIsoDate(date: Date): string {
-  return formatISO(date, { representation: 'date' })
+function parseIsoLocal(iso: string) {
+  const [ano, mes, dia] = iso.split('-').map(Number)
+  return new Date(ano ?? 0, (mes ?? 1) - 1, dia ?? 1)
+}
+
+function toIsoDate(date: Date) {
+  const ano = date.getFullYear()
+  const mes = String(date.getMonth() + 1).padStart(2, '0')
+  const dia = String(date.getDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
+
+function addDaysLocal(date: Date, days: number) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
 }
 
 export function gerarSemanasCiclo(opts: {
@@ -18,13 +29,13 @@ export function gerarSemanasCiclo(opts: {
 }): SemanaCiclo[] {
   if (opts.dataColheita) {
     // Colheita preenchida: semana 42 cai no dia da colheita.
-    const colheita = startOfDay(parseISO(opts.dataColheita))
-    const inicio = addDays(colheita, -(CICLO_SEMANAS * 7 - 1))
+    const colheita = parseIsoLocal(opts.dataColheita)
+    const inicio = addDaysLocal(colheita, -(CICLO_SEMANAS * 7 - 1))
     return montarSemanas(inicio, opts.cultura)
   }
 
   if (opts.dataInicio) {
-    return montarSemanas(startOfDay(parseISO(opts.dataInicio)), opts.cultura)
+    return montarSemanas(parseIsoLocal(opts.dataInicio), opts.cultura)
   }
 
   return []
@@ -33,8 +44,8 @@ export function gerarSemanasCiclo(opts: {
 function montarSemanas(inicio: Date, cultura?: Cultura | null): SemanaCiclo[] {
   return Array.from({ length: CICLO_SEMANAS }, (_, index) => {
     const numero = index + 1
-    const dataInicio = addDays(inicio, index * 7)
-    const dataFim = addDays(dataInicio, 6)
+    const dataInicio = addDaysLocal(inicio, index * 7)
+    const dataFim = addDaysLocal(dataInicio, 6)
     return {
       numero,
       dataInicio: toIsoDate(dataInicio),

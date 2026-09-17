@@ -7,8 +7,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: ReactNode
 }
 
-export function Input({ label, hint, id, className, ...props }: InputProps) {
+export function Input({ label, hint, id, className, inputMode, ...props }: InputProps) {
   const inputId = id ?? props.name
+  const tecladoNumero = inputMode === 'decimal' || inputMode === 'numeric'
 
   return (
     <label className="block space-y-1.5" htmlFor={inputId}>
@@ -17,6 +18,9 @@ export function Input({ label, hint, id, className, ...props }: InputProps) {
       </span>
       <input
         id={inputId}
+        lang={tecladoNumero ? 'pt-BR' : undefined}
+        inputMode={inputMode}
+        enterKeyHint={tecladoNumero ? 'done' : undefined}
         className={cn(
           'min-h-14 w-full rounded-leaf border-0 bg-cream px-3.5 text-[17px] font-medium text-ink outline-none placeholder:text-soil/30 focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)] lg:min-h-12 lg:text-base',
           className,

@@ -7,6 +7,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -20,7 +21,7 @@ import {
 import { fetchCurrentAd } from '@/lib/adminApi'
 
 interface AdContextValue {
-  showInterstitial: (placement: AdPlacement) => Promise<void>
+  showInterstitial: (placement: AdPlacement) => Promise<boolean>
 }
 
 const AdContext = createContext<AdContextValue | null>(null)
@@ -41,21 +42,29 @@ const INITIAL: InterstitialState = {
 
 export function AdGateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InterstitialState>(INITIAL)
+  const emCurso = useRef(false)
 
   const showInterstitial = useCallback(async (placement: AdPlacement) => {
     // No pomar o cálculo não para a cada toque; no login o anúncio entra sempre.
-    if (placement !== 'login' && adEmCooldown()) return
-    const ad = await fetchCurrentAd()
-    if (!ad?.url) return
+    if (placement !== 'login' && adEmCooldown()) return false
+    if (emCurso.current) return false
+    emCurso.current = true
+    try {
+      const ad = await fetchCurrentAd()
+      if (!ad?.url) return false
 
-    await new Promise<void>((resolve) => {
-      setState({
-        open: true,
-        placement,
-        ad,
-        resolve,
+      await new Promise<void>((resolve) => {
+        setState({
+          open: true,
+          placement,
+          ad,
+          resolve,
+        })
       })
-    })
+      return true
+    } finally {
+      emCurso.current = false
+    }
   }, [])
 
   const handleComplete = useCallback(() => {

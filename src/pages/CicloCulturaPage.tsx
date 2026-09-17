@@ -151,6 +151,7 @@ export function CicloCulturaPage() {
             <Button full>Abrir Produtor</Button>
           </Link>
         </Card>
+        <CompararSafras safras={safras} />
         <ListaSafras safras={safras} propriedade={propriedade} />
       </div>
     )
@@ -319,8 +320,53 @@ export function CicloCulturaPage() {
           Produtor.
         </p>
       ) : null}
+      <CompararSafras safras={safras} />
       <ListaSafras safras={safras} propriedade={propriedade} />
     </div>
+  )
+}
+
+function rotuloSafra(safra: SafraArquivada) {
+  const periodo = safra.dataColheita || safra.dataInicio
+  return `${culturaLabel(safra.cultura)}${periodo ? ` · ${formatDia(periodo)}` : ''}`
+}
+
+function CompararSafras({ safras }: { safras: SafraArquivada[] }) {
+  if (safras.length < 2) return null
+  const recente = safras[0]!
+  const anterior = safras[1]!
+  const linhas = [
+    { label: 'Total', a: recente.totais.geral, b: anterior.totais.geral },
+    { label: 'Insumos', a: recente.totais.insumos, b: anterior.totais.insumos },
+    { label: 'Mão de obra', a: recente.totais.maoDeObra, b: anterior.totais.maoDeObra },
+    { label: 'Máquinas', a: recente.totais.mecanizacao, b: anterior.totais.mecanizacao },
+  ]
+
+  return (
+    <Card className="space-y-3">
+      <p className="text-sm font-semibold text-soil">Comparar as duas últimas safras</p>
+      <p className="text-sm text-soil">
+        {rotuloSafra(recente)} × {rotuloSafra(anterior)}
+      </p>
+      {linhas.map((linha) => {
+        const delta = linha.a - linha.b
+        return (
+          <div key={linha.label} className="flex items-baseline justify-between gap-3 border-t border-line pt-2">
+            <span className="text-sm text-soil">{linha.label}</span>
+            <span className="text-right">
+              <span className="block font-medium text-ink">
+                {formatCurrency(linha.a)} → {formatCurrency(linha.b)}
+              </span>
+              <span className="text-sm text-soil">
+                {delta === 0
+                  ? 'Igual'
+                  : `${delta > 0 ? '+' : '−'} ${formatCurrency(Math.abs(delta))}`}
+              </span>
+            </span>
+          </div>
+        )
+      })}
+    </Card>
   )
 }
 

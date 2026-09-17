@@ -6,6 +6,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import { STORAGE_KEYS } from '@/data/constants'
 import { amostraJaLancada, lancarItensDeTeste, marcarAmostraLancada } from '@/lib/amostra'
+import { limparAdSessao } from '@/lib/ads'
 import { totalSemana } from '@/lib/ciclo'
 import {
   apagarDadosTitular,
@@ -107,6 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       /** Sair tira só nome e telefone; o caderno permanece no aparelho. */
       logout: () => {
         removeStore(STORAGE_KEYS.propriedade)
+        limparAdSessao()
         setPropriedade(null)
       },
       salvarProdutor: (config) => {
@@ -119,6 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       /** Exclusão LGPD: apaga identidade, caderno e o aceite. */
       apagarMeusDados: () => {
         apagarDadosTitular()
+        limparAdSessao()
         setPropriedade(null)
         setProdutor(PRODUTOR_PADRAO)
         setConsentimento(null)

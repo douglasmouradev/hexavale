@@ -37,7 +37,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: { enabled: false },
-      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brand/*.png', 'icons/*.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brand/*', 'icons/*.png'],
       manifest: {
         name: 'Hexavale',
         short_name: 'Hexavale',

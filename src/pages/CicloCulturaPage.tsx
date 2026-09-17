@@ -4,8 +4,10 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { useApp } from '@/context/AppContext'
@@ -139,11 +141,7 @@ export function CicloCulturaPage() {
   if (!semanas.length) {
     return (
       <div className="space-y-4">
-        {avisoFechar ? (
-          <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
-            {avisoFechar}
-          </p>
-        ) : null}
+        {avisoFechar ? <Banner>{avisoFechar}</Banner> : null}
         <Card className="space-y-3">
           <p className="font-bold text-ink">Falta a data do ciclo</p>
           <p className="text-sm text-soil">
@@ -160,19 +158,48 @@ export function CicloCulturaPage() {
 
   return (
     <div className="space-y-4">
-      <Card tone="field">
-        <p className="text-sm font-bold text-yellow-200">Safra · 42 semanas</p>
-        <p className="mt-1 text-2xl font-bold text-white">{formatCurrency(totais.geral)}</p>
-        <p className="mt-2 text-sm font-semibold text-white">
-          Insumos {formatCurrency(totais.insumos)} · Mão de obra{' '}
-          {formatCurrency(totais.maoDeObra)} · Máquinas {formatCurrency(totais.mecanizacao)}
-        </p>
+      <Card tone="field" className="space-y-4">
+        <p className="text-sm font-medium text-mango-light">Safra · 42 semanas</p>
+        <p className="font-display text-2xl font-bold text-white">{formatCurrency(totais.geral)}</p>
         {alvo ? (
-          <p className="mt-2 text-sm text-white/80">
+          <p className="text-sm text-white/80">
             Agora: semana {alvo.numero} · {alvo.tipoTrabalho}
           </p>
         ) : null}
+        {totais.geral > 0 ? (
+          <GraficoPizza
+            invert
+            centro={formatCurrency(totais.geral)}
+            formatValor={formatCurrency}
+            fatias={[
+              { label: 'Insumos', value: totais.insumos },
+              { label: 'Mão de obra', value: totais.maoDeObra },
+              { label: 'Máquinas', value: totais.mecanizacao },
+            ]}
+          />
+        ) : (
+          <p className="text-sm text-white/80">
+            Insumos {formatCurrency(totais.insumos)} · Mão de obra{' '}
+            {formatCurrency(totais.maoDeObra)} · Máquinas {formatCurrency(totais.mecanizacao)}
+          </p>
+        )}
       </Card>
+
+      {totais.geral > 0 ? (
+        <Card className="space-y-3">
+          <p className="font-medium text-ink">Custo por fase</p>
+          <GraficoPizza
+            centro="Fases"
+            formatValor={formatCurrency}
+            fatias={fases.map((fase) => ({
+              label: fase.titulo,
+              value: semanas
+                .filter((semana) => semana.numero >= fase.inicio && semana.numero <= fase.fim)
+                .reduce((sum, semana) => sum + totalSemana(semana), 0),
+            }))}
+          />
+        </Card>
+      ) : null}
 
       {fases.map((fase) => {
         const chave = chaveFase(fase.inicio, fase.fim)
@@ -235,11 +262,7 @@ export function CicloCulturaPage() {
       >
         Exportar PDF
       </Button>
-      {avisoFechar ? (
-        <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
-          {avisoFechar}
-        </p>
-      ) : null}
+      {avisoFechar ? <Banner>{avisoFechar}</Banner> : null}
       <Button variant="outline" full onClick={handleFecharSafra}>
         {confirmarFechar
           ? 'Confirmar: guardar e começar safra nova'
@@ -293,12 +316,24 @@ function ListaSafras({
               </span>
             </button>
             {expandida ? (
-              <div className="space-y-2 border-t border-black/5 pt-3">
-                <p className="text-sm text-soil">
-                  Insumos {formatCurrency(safra.totais.insumos)} · Mão de obra{' '}
-                  {formatCurrency(safra.totais.maoDeObra)} · Máquinas{' '}
-                  {formatCurrency(safra.totais.mecanizacao)}
-                </p>
+              <div className="space-y-3 border-t border-line pt-3">
+                {safra.totais.geral > 0 ? (
+                  <GraficoPizza
+                    centro={formatCurrency(safra.totais.geral)}
+                    formatValor={formatCurrency}
+                    fatias={[
+                      { label: 'Insumos', value: safra.totais.insumos },
+                      { label: 'Mão de obra', value: safra.totais.maoDeObra },
+                      { label: 'Máquinas', value: safra.totais.mecanizacao },
+                    ]}
+                  />
+                ) : (
+                  <p className="text-sm text-soil">
+                    Insumos {formatCurrency(safra.totais.insumos)} · Mão de obra{' '}
+                    {formatCurrency(safra.totais.maoDeObra)} · Máquinas{' '}
+                    {formatCurrency(safra.totais.mecanizacao)}
+                  </p>
+                )}
                 <Button
                   variant="outline"
                   full
@@ -340,7 +375,7 @@ function SemanaEditor({
   const diarias = maoLancada(semana)
 
   return (
-    <div className="space-y-3 rounded-2xl bg-cream/70 p-3">
+    <div className="space-y-3 border border-line bg-cream/50 p-3">
       <button
         type="button"
         className="flex w-full items-start justify-between gap-3 text-left"

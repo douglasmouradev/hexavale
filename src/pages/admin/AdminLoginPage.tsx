@@ -1,8 +1,10 @@
-/** Login do painel (e-mail/senha no MySQL). */
+/** Login do painel: sala verde, ficha de papel — distinto do produtor. */
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { adminRequest, setAdminToken } from '@/lib/adminApi'
 
@@ -33,14 +35,14 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center bg-cream px-4 py-8">
-      <div className="mx-auto w-full max-w-md rounded-[2rem] bg-paper p-6 shadow-[0_20px_60px_rgba(23,20,17,0.08)]">
-        <div className="mb-8 text-center">
-          <Logo size={64} className="mx-auto" />
-          <p className="mt-3 font-display text-[2rem] font-bold tracking-tight text-field">
-            Hexavale
-          </p>
-          <p className="mt-1 text-sm font-semibold text-mango">Administração</p>
+    <div className="flex min-h-svh items-center bg-field px-4 py-10">
+      <Card className="mx-auto w-full max-w-md space-y-5 p-5">
+        <div className="flex items-center gap-3">
+          <Logo size={40} />
+          <div>
+            <p className="text-sm text-soil">Painel de vídeos</p>
+            <p className="font-display text-2xl font-bold text-field">Hexavale</p>
+          </div>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -60,26 +62,18 @@ export function AdminLoginPage() {
             value={senha}
             onChange={(event) => setSenha(event.target.value)}
           />
-          {error ? (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
-              {error}
-            </p>
-          ) : null}
+          {error ? <Banner tone="danger">{error}</Banner> : null}
           <Button type="submit" full disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-soil">
-          E-mail e senha ficam no servidor só para o painel, conforme a LGPD.
+        <p className="text-center text-sm text-soil">
+          <Link to="/privacidade" className="text-field">
+            Privacidade
+          </Link>
         </p>
-        <Link
-          to="/privacidade"
-          className="mt-3 block text-center text-sm font-semibold text-mango"
-        >
-          Política de Privacidade
-        </Link>
-      </div>
+      </Card>
     </div>
   )
 }

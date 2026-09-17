@@ -1,5 +1,4 @@
-/** Convite para colocar o Hexavale na tela inicial do celular. */
-import { Smartphone } from 'lucide-react'
+/** Convite para a tela inicial — texto, sem ícone Lucide. */
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useInstalarPwa } from '@/hooks/useInstalarPwa'
@@ -10,18 +9,13 @@ export function InstalarAppCard() {
 
   return (
     <Card className="space-y-3">
-      <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-field text-white">
-          <Smartphone className="h-5 w-5" strokeWidth={2.2} />
-        </span>
-        <div>
-          <p className="font-bold text-field">Instalar no celular</p>
-          <p className="mt-1 text-sm leading-snug text-soil">
-            {ios
-              ? 'No Safari: toque em Compartilhar e depois em Adicionar à Tela de Início.'
-              : 'Fica na tela inicial e abre sem a barra do navegador.'}
-          </p>
-        </div>
+      <div>
+        <p className="font-medium text-field">Instalar no celular</p>
+        <p className="mt-1 text-sm text-soil">
+          {ios
+            ? 'No Safari: Compartilhar → Adicionar à Tela de Início.'
+            : 'Fica na tela inicial, sem a barra do navegador.'}
+        </p>
       </div>
       {podeInstalar ? (
         <Button full onClick={() => void instalar()}>

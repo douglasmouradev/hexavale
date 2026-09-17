@@ -1,9 +1,8 @@
-/** Barra superior: título da tela, cultura e Sair (não apaga o caderno). */
+/** Topo sólido (sem vidro). Em casa: imagotipo. Nas outras telas: voltar + título. */
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Logo } from '@/components/brand/Logo'
+import { Wordmark } from '@/components/brand/Logo'
+import { ChipCultura } from '@/components/ui/Chip'
 import { useApp } from '@/context/AppContext'
-import { culturaLabel } from '@/data/modules'
-import { cn } from '@/lib/format'
 
 const TITLES: Record<string, string> = {
   '/': 'Início',
@@ -22,32 +21,23 @@ export function Header() {
   const { propriedade, produtor, logout } = useApp()
   const isHome = pathname === '/'
   const title = TITLES[pathname] ?? 'Hexavale'
-  const uva = produtor.cultura === 'uva'
 
   return (
-    <header className="sticky top-0 z-20 border-b border-black/5 bg-paper/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-      <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-2.5">
+    <header className="sticky top-0 z-20 border-b border-line bg-paper pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-2.5">
         {isHome ? (
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Logo size={36} />
-            <div className="min-w-0 leading-none">
-              <p className="text-[10px] font-semibold tracking-[0.22em] text-mango uppercase">
-                Vale do SF
-              </p>
-              <p className="font-display truncate text-lg font-bold text-field">
-                Hexavale
-              </p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <Wordmark height={26} />
           </div>
         ) : (
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cream text-lg text-field"
+              className="text-sm font-medium text-field"
               aria-label="Voltar"
             >
-              ←
+              Voltar
             </button>
             <div className="min-w-0">
               <p className="font-display truncate text-xl font-bold text-field">{title}</p>
@@ -56,21 +46,14 @@ export function Header() {
           </div>
         )}
 
-        <span
-          className={cn(
-            'rounded-full px-3 py-1 text-xs font-bold text-white',
-            uva ? 'bg-grape' : 'bg-mango',
-          )}
-        >
-          {culturaLabel(produtor.cultura)}
-        </span>
+        <ChipCultura cultura={produtor.cultura} />
         <button
           type="button"
           onClick={() => {
             logout()
             navigate('/login', { replace: true })
           }}
-          className="rounded-full bg-cream px-3 py-1.5 text-sm font-semibold text-soil"
+          className="text-sm font-medium text-soil"
         >
           Sair
         </button>

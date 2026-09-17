@@ -2,9 +2,11 @@
 import { useState, type FormEvent } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { PageTitle } from '@/components/ui/PageTitle'
 import { useApp } from '@/context/AppContext'
 import { CICLO_SEMANAS } from '@/data/constants'
 import { gerarSemanasCiclo } from '@/lib/ciclo'
@@ -44,10 +46,7 @@ export function ProdutorPage() {
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
-      <div>
-        <h2 className="font-display text-2xl font-bold text-field">Cultura</h2>
-        <p className="mt-1 text-sm text-soil">Manga ou uva desta propriedade.</p>
-      </div>
+      <PageTitle title="Cultura" subtitle="Manga ou uva desta propriedade." />
 
       <div className="grid grid-cols-2 gap-3">
         <button
@@ -57,10 +56,10 @@ export function ProdutorPage() {
             setSaved(false)
           }}
           className={cn(
-            'min-h-24 rounded-3xl px-4 py-5 text-left font-display text-2xl font-bold',
+            'min-h-24 rounded-leaf border px-4 py-5 text-left font-display text-2xl font-bold',
             cultura === 'manga'
-              ? 'bg-mango text-white shadow-sm'
-              : 'bg-paper text-field shadow-[0_8px_30px_rgba(23,20,17,0.06)]',
+              ? 'border-mango bg-mango text-white'
+              : 'border-line bg-paper text-field',
           )}
         >
           Manga
@@ -72,10 +71,10 @@ export function ProdutorPage() {
             setSaved(false)
           }}
           className={cn(
-            'min-h-24 rounded-3xl px-4 py-5 text-left font-display text-2xl font-bold',
+            'min-h-24 rounded-leaf border px-4 py-5 text-left font-display text-2xl font-bold',
             cultura === 'uva'
-              ? 'bg-grape text-white shadow-sm'
-              : 'bg-paper text-field shadow-[0_8px_30px_rgba(23,20,17,0.06)]',
+              ? 'border-grape bg-grape text-white'
+              : 'border-line bg-paper text-field',
           )}
         >
           Uva
@@ -129,11 +128,7 @@ export function ProdutorPage() {
         </Card>
       ) : null}
 
-      {saved ? (
-        <p className="border border-field bg-field/10 px-4 py-3 text-sm font-semibold text-field">
-          Dados do produtor salvos neste aparelho.
-        </p>
-      ) : null}
+      {saved ? <Banner>Dados do produtor salvos neste aparelho.</Banner> : null}
 
       <Button type="submit" full disabled={!cultura}>
         Salvar

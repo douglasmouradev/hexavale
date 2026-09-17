@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -75,16 +76,16 @@ export function AdminVideosPage() {
   }
 
   return (
-    <div className="mx-auto min-h-svh max-w-lg bg-cream px-4 py-5">
-      <header className="mb-5 flex items-center gap-3">
-        <Logo size={40} />
+    <div className="mx-auto min-h-svh max-w-lg bg-cream">
+      <header className="mb-5 flex items-center gap-3 bg-field px-4 py-4 text-white">
+        <Logo size={36} />
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-ink">Propagandas</h1>
-          <p className="text-sm text-soil">Vídeos do anúncio no app</p>
+          <h1 className="font-display text-xl font-bold">Propagandas</h1>
+          <p className="text-sm text-white/70">Vídeos do anúncio no app</p>
         </div>
         <button
           type="button"
-          className="text-sm font-bold text-field-dark"
+          className="text-sm font-medium text-mango-light"
           onClick={() => {
             clearAdminToken()
             navigate('/admin/login', { replace: true })
@@ -93,6 +94,8 @@ export function AdminVideosPage() {
           Sair
         </button>
       </header>
+
+      <div className="px-4 pb-8">
 
       <form className="space-y-4" onSubmit={handleUpload}>
         <Card className="space-y-4">
@@ -108,15 +111,11 @@ export function AdminVideosPage() {
             <input
               type="file"
               accept="video/mp4,video/webm,video/ogg,video/quicktime"
-              className="block w-full text-sm text-soil file:mr-3 file:rounded-xl file:border-0 file:bg-field file:px-4 file:py-3 file:font-bold file:text-cream"
+              className="block w-full text-sm text-soil file:mr-3 file:rounded-leaf file:border-0 file:bg-field file:px-4 file:py-3 file:font-semibold file:text-cream"
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             />
           </label>
-          {error ? (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
-              {error}
-            </p>
-          ) : null}
+          {error ? <Banner tone="danger">{error}</Banner> : null}
           <Button type="submit" full disabled={loading}>
             {loading ? 'Enviando...' : 'Enviar vídeo'}
           </Button>
@@ -143,17 +142,18 @@ export function AdminVideosPage() {
                 </Button>
               </div>
             </div>
-            <video src={video.url} className="w-full rounded-2xl bg-ink" controls playsInline />
+            <video src={video.url} className="w-full rounded-leaf bg-ink" controls playsInline />
           </Card>
         ))}
       </div>
 
       <Link
         to="/privacidade"
-        className="mt-6 block pb-6 text-center text-sm font-semibold text-mango"
+        className="mt-6 block pb-6 text-center text-sm text-field"
       >
-        Política de Privacidade
+        Privacidade
       </Link>
+      </div>
     </div>
   )
 }

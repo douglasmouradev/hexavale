@@ -4,7 +4,7 @@
 @import "@fontsource/source-sans-3/700.css";
 @import "tailwindcss";
 
-/* Paleta HexaVale (Tailwind v4 @theme). */
+/* Sistema HexaVale: papel de caderno, 2 raios, paleta da marca. Sem red-50/stone. */
 
 @theme {
   --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
@@ -21,7 +21,12 @@
   --color-soil: #3a2a1c;
   --color-ink: #171411;
   --color-paper: #fffcf7;
-  --radius-xl: 1.25rem;
+  --color-line: #d4c7b0;
+  --color-danger: #8f3a16;
+  --radius-leaf: 0.375rem;
+  --radius-chip: 9999px;
+  --shadow-paper: 0 1px 0 rgb(23 20 17 / 0.12);
+  --shadow-lift: 0 10px 28px rgb(23 20 17 / 0.2);
 }
 
 html,
@@ -34,7 +39,7 @@ body {
   margin: 0;
   color: var(--color-ink);
   font-family: var(--font-sans);
-  background: #ece6da;
+  background: var(--color-cream-dark);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

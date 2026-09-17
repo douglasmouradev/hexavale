@@ -1,4 +1,4 @@
-/** Cartão da interface: fundo claro ou verde (hero). */
+/** Cartão de caderno: recorte seco, borda de linha. Verde só no resumo da safra. */
 import type { HTMLAttributes } from 'react'
 import { cn } from '@/lib/format'
 
@@ -10,9 +10,9 @@ export function Card({ className, tone = 'plain', ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-3xl p-5',
-        tone === 'plain' && 'bg-paper text-ink shadow-[0_8px_30px_rgba(23,20,17,0.06)]',
-        tone === 'field' && 'bg-field text-white shadow-[0_12px_32px_rgba(26,61,43,0.28)]',
+        'rounded-leaf p-4',
+        tone === 'plain' && 'border border-line bg-paper text-ink shadow-paper',
+        tone === 'field' && 'border-l-4 border-mango bg-field text-white shadow-none',
         className,
       )}
       {...props}

@@ -2,8 +2,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { useAds } from '@/context/AdContext'
@@ -126,7 +128,7 @@ export function MaoDeObraPage() {
             <p className="font-bold text-soil">Serviço {index + 1}</p>
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cream"
+              className="flex h-12 w-12 items-center justify-center rounded-leaf bg-cream"
               onClick={() =>
                 setForm((current) => ({
                   ...current,
@@ -201,26 +203,26 @@ export function MaoDeObraPage() {
         Adicionar serviço
       </Button>
 
-      {error ? (
-        <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
-          {error}
-        </p>
-      ) : null}
+      {error ? <Banner tone="danger">{error}</Banner> : null}
 
       {linhas ? (
         <Card className="space-y-3">
+          <GraficoPizza
+            centro={formatCurrency(total)}
+            formatValor={formatCurrency}
+            fatias={linhas.map((linha) => ({
+              label: linha.nome,
+              value: linha.custo,
+            }))}
+          />
           {linhas.map((linha) => (
             <div key={linha.nome} className="flex justify-between">
-              <span className="font-bold text-ink">{linha.nome}</span>
+              <span className="font-medium text-ink">{linha.nome}</span>
               <span>{formatCurrency(linha.custo)}</span>
             </div>
           ))}
           <p className="text-lg font-bold">Total {formatCurrency(total)}</p>
-          {aviso ? (
-            <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
-              {aviso}
-            </p>
-          ) : null}
+          {aviso ? <Banner>{aviso}</Banner> : null}
           <Button type="button" full onClick={handleLancar}>
             Lançar na semana atual
           </Button>

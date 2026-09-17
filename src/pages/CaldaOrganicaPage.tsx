@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, lazy, Suspense, type FormEvent } from 'rea
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { UsarCatalogo } from '@/components/caderno/UsarCatalogo'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -167,7 +168,7 @@ export function CaldaOrganicaPage() {
               }))
             }
           />
-          <label className="flex items-center gap-3 rounded-2xl bg-cream/70 px-4 py-3">
+          <label className="flex items-center gap-3 border border-line bg-cream/50 px-3 py-3">
             <input
               type="checkbox"
               className="h-5 w-5 accent-field"
@@ -192,14 +193,14 @@ export function CaldaOrganicaPage() {
           {form.insumos.map((insumo, index) => (
             <div
               key={insumo.id}
-              className="space-y-3 rounded-2xl bg-cream/70 p-4"
+              className="space-y-3 border border-line bg-cream/50 p-3"
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="font-bold text-soil">Insumo {index + 1}</p>
                 <button
                   type="button"
                   onClick={() => removeInsumo(insumo.id)}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-soil"
+                  className="flex h-11 w-11 items-center justify-center rounded-leaf bg-paper text-soil"
                   aria-label={`Remover ${insumo.nome || `insumo ${index + 1}`}`}
                 >
                   <Trash2 className="h-5 w-5" />
@@ -260,11 +261,7 @@ export function CaldaOrganicaPage() {
           </Link>
         </Card>
 
-        {error ? (
-          <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
-            {error}
-          </p>
-        ) : null}
+        {error ? <Banner tone="danger">{error}</Banner> : null}
 
         <Button type="submit" full>
           Calcular

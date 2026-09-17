@@ -5,6 +5,8 @@
  */
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import { STORAGE_KEYS } from '@/data/constants'
+import { amostraJaLancada, lancarItensDeTeste, marcarAmostraLancada } from '@/lib/amostra'
+import { totalSemana } from '@/lib/ciclo'
 import {
   apagarDadosTitular,
   consentimentoValido as consentimentoDaVersao,
@@ -15,7 +17,7 @@ import {
   type PacoteTitular,
 } from '@/lib/lgpd'
 import { readStore, removeStore, writeStore } from '@/storage/localStore'
-import { PRODUTOR_PADRAO, type ConfigProdutor, type Propriedade } from '@/types/models'
+import { PRODUTOR_PADRAO, type CicloCultura, type ConfigProdutor, type Propriedade } from '@/types/models'
 
 interface AppContextValue {
   propriedade: Propriedade | null
@@ -44,10 +46,29 @@ function loadProdutor(): ConfigProdutor {
   }
 }
 
+function cicloTemCusto() {
+  const ciclo = readStore<CicloCultura>(STORAGE_KEYS.ciclo)
+  return Boolean(ciclo?.semanas?.some((semana) => totalSemana(semana) > 0))
+}
+
+function aplicarAmostraSeVazio(produtor: ConfigProdutor) {
+  if (amostraJaLancada()) return produtor
+  if (cicloTemCusto()) {
+    marcarAmostraLancada()
+    return produtor
+  }
+  return lancarItensDeTeste(produtor)
+}
+
 function loadInitialState() {
+  const propriedade = readStore<Propriedade>(STORAGE_KEYS.propriedade)
+  let produtor = loadProdutor()
+  if (propriedade) {
+    produtor = aplicarAmostraSeVazio(produtor)
+  }
   return {
-    propriedade: readStore<Propriedade>(STORAGE_KEYS.propriedade),
-    produtor: loadProdutor(),
+    propriedade,
+    produtor,
     consentimento: lerConsentimento(),
   }
 }
@@ -77,6 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         writeStore(STORAGE_KEYS.propriedade, next)
         setPropriedade(next)
         setConsentimento(registrarConsentimento())
+        setProdutor(aplicarAmostraSeVazio(loadProdutor()))
         return next
       },
       /** Sair tira só nome e telefone; o caderno permanece no aparelho. */

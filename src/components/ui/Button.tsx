@@ -1,4 +1,4 @@
-/** Botão grande para uso no campo (min 56px). */
+/** Botão de campo: recorte leaf, toque 56px. Mango só em ação secundária. */
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/format'
 
@@ -18,11 +18,11 @@ export function Button({
     <button
       type={type}
       className={cn(
-        'inline-flex min-h-14 items-center justify-center rounded-2xl px-5 text-base font-bold transition enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'primary' && 'bg-field text-white shadow-sm',
-        variant === 'secondary' && 'bg-mango text-white shadow-sm',
+        'inline-flex min-h-14 items-center justify-center rounded-leaf px-5 text-base font-semibold transition enabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50',
+        variant === 'primary' && 'bg-field text-white',
+        variant === 'secondary' && 'bg-mango text-white',
         variant === 'ghost' && 'bg-transparent text-field',
-        variant === 'outline' && 'border border-field/20 bg-paper text-field',
+        variant === 'outline' && 'border border-line bg-paper text-field',
         full && 'w-full',
         className,
       )}

@@ -1,8 +1,11 @@
-/** Direitos do titular: ver, exportar, restaurar cópia e apagar tudo neste aparelho. */
+/** Direitos do titular: ver, exportar, restaurar cópia e apagar neste aparelho. */
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { PageTitle } from '@/components/ui/PageTitle'
+import { Row } from '@/components/ui/Row'
 import { useApp } from '@/context/AppContext'
 import { POLITICA_VERSAO } from '@/data/lgpd'
 import { baixarDadosTitular, lerArquivoPacote, type PacoteTitular } from '@/lib/lgpd'
@@ -60,55 +63,38 @@ export function MeusDadosPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="font-display text-2xl font-bold text-field">Seus dados</h2>
-        <p className="mt-1 text-sm text-soil">
-          Direito de acesso, correção, portabilidade e exclusão (LGPD, art. 18).
-        </p>
-      </div>
+      <PageTitle
+        title="Seus dados"
+        subtitle="Acesso, correção, cópia e exclusão neste aparelho."
+      />
 
-      <Card className="space-y-3">
-        <h3 className="font-bold text-ink">Identificação neste aparelho</h3>
-        <p className="flex justify-between gap-3 text-sm">
-          <span className="text-soil">Propriedade</span>
-          <span className="font-semibold text-ink">{propriedade?.nome ?? '—'}</span>
-        </p>
-        <p className="flex justify-between gap-3 text-sm">
-          <span className="text-soil">Telefone</span>
-          <span className="font-semibold text-ink">
-            {propriedade?.telefone ? formatPhone(propriedade.telefone) : '—'}
-          </span>
-        </p>
-        <p className="flex justify-between gap-3 text-sm">
-          <span className="text-soil">Entrada</span>
-          <span className="font-semibold text-ink">{formatQuando(propriedade?.loggedAt)}</span>
-        </p>
-        <p className="flex justify-between gap-3 text-sm">
-          <span className="text-soil">Consentimento</span>
-          <span className="text-right font-semibold text-ink">
-            {consentimento
+      <Card>
+        <h3 className="mb-1 font-medium text-ink">Neste aparelho</h3>
+        <Row label="Propriedade" value={propriedade?.nome ?? '—'} />
+        <Row
+          label="Telefone"
+          value={propriedade?.telefone ? formatPhone(propriedade.telefone) : '—'}
+        />
+        <Row label="Entrada" value={formatQuando(propriedade?.loggedAt)} />
+        <Row
+          label="Aceite"
+          value={
+            consentimento
               ? `v${consentimento.versao} · ${formatQuando(consentimento.aceitoEm)}`
-              : 'Pendente'}
-          </span>
-        </p>
+              : 'Pendente'
+          }
+        />
       </Card>
 
-      <Card className="space-y-3">
-        <h3 className="font-bold text-ink">Caderno (só neste celular)</h3>
-        <p className="flex justify-between gap-3 text-sm">
-          <span className="text-soil">Cultura</span>
-          <span className="font-semibold text-ink">{produtor.cultura ?? '—'}</span>
+      <Card>
+        <h3 className="mb-1 font-medium text-ink">Caderno</h3>
+        <Row label="Cultura" value={produtor.cultura ?? '—'} />
+        <Row label="Área (ha)" value={produtor.areaHectares ?? '—'} />
+        <p className="mt-3 text-sm text-soil">
+          Calda, insumos, diária e ciclo também ficam aqui. Política: versão {POLITICA_VERSAO}.
         </p>
-        <p className="flex justify-between gap-3 text-sm">
-          <span className="text-soil">Área (ha)</span>
-          <span className="font-semibold text-ink">{produtor.areaHectares ?? '—'}</span>
-        </p>
-        <p className="text-sm leading-relaxed text-soil">
-          Calda, insumos, diária e ciclo também ficam aqui. Corrija em Produtor ou em cada
-          ferramenta. Política vigente: versão {POLITICA_VERSAO}.
-        </p>
-        <Link to="/produtor" className="block text-sm font-semibold text-mango">
-          Corrigir dados em Produtor
+        <Link to="/produtor" className="mt-2 inline-block text-sm text-field">
+          Corrigir em Produtor
         </Link>
       </Card>
 
@@ -131,20 +117,14 @@ export function MeusDadosPage() {
         >
           {restaurando ? 'Restaurando...' : 'Restaurar cópia'}
         </Button>
-        {aviso ? (
-          <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
-            {aviso}
-          </p>
-        ) : null}
+        {aviso ? <Banner tone="ok">{aviso}</Banner> : null}
         {pendente ? (
           <Button full onClick={confirmarRestaurar}>
             Confirmar restauração
           </Button>
         ) : null}
         {erro ? (
-          <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
-            {erro}
-          </p>
+          <Banner tone="danger">{erro}</Banner>
         ) : (
           <p className="text-sm text-soil">
             Restaurar substitui o caderno deste aparelho pela cópia do arquivo.
@@ -154,9 +134,9 @@ export function MeusDadosPage() {
           {confirmar ? 'Toque de novo para apagar tudo' : 'Apagar meus dados'}
         </Button>
         {confirmar ? (
-          <p className="text-sm font-semibold text-red-800">
+          <Banner tone="danger">
             Isso apaga nome, telefone, caderno e o aceite neste aparelho. Não dá para desfazer.
-          </p>
+          </Banner>
         ) : (
           <p className="text-sm text-soil">
             Sair só tira nome e telefone da sessão. Apagar remove o caderno também.
@@ -164,7 +144,7 @@ export function MeusDadosPage() {
         )}
       </Card>
 
-      <Link to="/privacidade" className="block text-center text-sm font-semibold text-mango">
+      <Link to="/privacidade" className="block text-center text-sm text-field">
         Ler a Política de Privacidade
       </Link>
     </div>

@@ -1,6 +1,7 @@
-/** Vídeo do anúncio já escolhido pelo painel; o timer só corre com URL válida. */
+/** Vídeo do anúncio; timer só corre com URL válida. */
 import { useEffect, useState } from 'react'
 import { getAdPolicy, type AdPlacement } from '@/lib/ads'
+import { Button } from '@/components/ui/Button'
 
 interface AdInterstitialProps {
   placement: AdPlacement
@@ -38,19 +39,19 @@ export function AdInterstitial({
       aria-modal="true"
       aria-labelledby="ad-title"
     >
-      <div className="flex w-full max-w-md flex-col overflow-hidden rounded-[1.75rem] bg-paper shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="bg-field px-5 py-3 text-center text-xs font-bold tracking-[0.2em] text-white uppercase">
+      <div className="flex w-full max-w-md flex-col overflow-hidden rounded-leaf bg-paper shadow-lift">
+        <div className="border-b border-line bg-field px-4 py-2 text-sm font-medium text-white">
           Publicidade
         </div>
 
         <div className="space-y-4 p-4">
-          <h2 id="ad-title" className="px-1 text-lg font-bold text-ink">
+          <h2 id="ad-title" className="font-display text-lg font-bold text-ink">
             {titulo}
           </h2>
 
           <video
             src={videoUrl}
-            className="aspect-video w-full rounded-2xl bg-ink"
+            className="aspect-video w-full rounded-leaf bg-ink"
             autoPlay
             playsInline
             controls={false}
@@ -59,10 +60,8 @@ export function AdInterstitial({
             }}
           />
 
-          <div className="flex items-center justify-between gap-4 px-1">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-field text-xl font-bold text-field-dark">
-              {secondsLeft}
-            </div>
+          <div className="flex items-center justify-between gap-4">
+            <p className="font-display text-2xl font-bold text-field">{secondsLeft}s</p>
             <p className="flex-1 text-sm text-soil">
               {canSkip
                 ? 'Pode seguir.'
@@ -70,17 +69,9 @@ export function AdInterstitial({
             </p>
           </div>
 
-          <button
-            type="button"
-            disabled={!canSkip}
-            onClick={onComplete}
-            className="min-h-14 w-full rounded-2xl bg-field text-base font-bold text-white transition enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-cream-dark disabled:text-soil/50"
-          >
+          <Button full disabled={!canSkip} onClick={onComplete}>
             {canSkip ? 'Seguir' : `Aguarde ${policy.skipAfterSeconds - elapsed}s`}
-          </button>
-          <p className="px-1 text-center text-xs text-soil">
-            Este anúncio não envia seu telefone, nome nem o caderno.
-          </p>
+          </Button>
         </div>
       </div>
     </div>

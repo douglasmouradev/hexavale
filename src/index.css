@@ -1,0 +1,57 @@
+@import "@fontsource/archivo-narrow/700.css";
+@import "@fontsource/source-sans-3/400.css";
+@import "@fontsource/source-sans-3/600.css";
+@import "@fontsource/source-sans-3/700.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
+  --font-display: "Archivo Narrow", "Arial Narrow", sans-serif;
+  --color-field: #1a3d2b;
+  --color-field-dark: #10261b;
+  --color-field-light: #2f6a48;
+  --color-mango: #e85d04;
+  --color-mango-light: #ff9f4a;
+  --color-grape: #6d3b8a;
+  --color-grape-light: #a56bc4;
+  --color-cream: #f6f1e8;
+  --color-cream-dark: #e4d9c5;
+  --color-soil: #3a2a1c;
+  --color-ink: #171411;
+  --color-paper: #fffcf7;
+  --radius-xl: 1.25rem;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  background: #ece6da;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}

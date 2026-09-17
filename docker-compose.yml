@@ -1,0 +1,24 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: hexa-manga-mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: hexa_manga
+      MYSQL_USER: hexa
+      MYSQL_PASSWORD: hexa_manga
+      MYSQL_ROOT_PASSWORD: hexa_root
+    volumes:
+      - hexa-mysql-data:/var/lib/mysql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uhexa", "-phexa_manga"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  hexa-mysql-data:

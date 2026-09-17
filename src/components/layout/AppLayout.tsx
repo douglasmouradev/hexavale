@@ -1,6 +1,7 @@
 /** Casca do produtor: topo, conteúdo, navegação e o aviso LGPD se faltar aceite. */
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { CadernoAviso } from '@/components/layout/CadernoAviso'
 import { Header } from '@/components/layout/Header'
 import { SideNav } from '@/components/layout/SideNav'
 import { ConsentGate } from '@/components/lgpd/ConsentGate'
@@ -11,7 +12,8 @@ export function AppLayout() {
       <SideNav />
       <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <Header />
-        <main className="mx-auto w-full max-w-lg flex-1 px-4 py-5 pb-28 desk:max-w-6xl desk:px-8 desk:py-8 desk:pb-10">
+        <CadernoAviso />
+        <main className="mx-auto w-full max-w-lg flex-1 px-4 py-4 pb-32 desk:max-w-6xl desk:px-8 desk:py-8 desk:pb-10">
           <Outlet />
         </main>
         <BottomNav />

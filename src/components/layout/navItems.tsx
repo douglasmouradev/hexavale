@@ -59,3 +59,5 @@ export const BOTTOM_NAV_ITEMS: NavItem[] = [
     ),
   },
 ]
+
+export const BOTTOM_NAV_PATHS = BOTTOM_NAV_ITEMS.map((item) => item.to)

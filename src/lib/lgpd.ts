@@ -4,7 +4,9 @@
  */
 import { POLITICA_VERSAO } from '@/data/lgpd'
 import { STORAGE_KEYS } from '@/data/constants'
+import { marcarCopiaFeita } from '@/lib/copia'
 import { readStore, removeStore, writeStore } from '@/storage/localStore'
+import type { ConfigProdutor, Propriedade } from '@/types/models'
 
 export interface ConsentimentoLgpd {
   versao: string
@@ -85,6 +87,7 @@ export function baixarDadosTitular() {
   link.download = `hexavale-meus-dados-${dia}.json`
   link.click()
   URL.revokeObjectURL(url)
+  marcarCopiaFeita()
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -97,39 +100,102 @@ function parseConsentimento(value: unknown): ConsentimentoLgpd | null {
   return { versao: value.versao, aceitoEm: value.aceitoEm }
 }
 
+function parseIsoDate(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value !== 'string') return null
+  const dia = value.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return null
+  return dia
+}
+
+function parsePropriedade(value: unknown): Propriedade | null {
+  if (!isRecord(value)) return null
+  if (typeof value.nome !== 'string' || typeof value.telefone !== 'string') return null
+  const nome = value.nome.trim().slice(0, 120)
+  const telefone = value.telefone.replace(/\D/g, '').slice(0, 11)
+  if (!nome || telefone.length < 10) return null
+  return {
+    nome,
+    telefone,
+    loggedAt: typeof value.loggedAt === 'string' ? value.loggedAt : new Date().toISOString(),
+  }
+}
+
+function parseProdutor(value: unknown): ConfigProdutor | null {
+  if (!isRecord(value)) return null
+  const cultura = value.cultura
+  if (cultura !== null && cultura !== undefined && cultura !== 'manga' && cultura !== 'uva') {
+    return null
+  }
+  const area =
+    typeof value.areaHectares === 'string' || value.areaHectares === null
+      ? value.areaHectares
+      : null
+  return {
+    cultura: cultura === 'manga' || cultura === 'uva' ? cultura : null,
+    dataReferencia: parseIsoDate(value.dataReferencia),
+    dataColheita: parseIsoDate(value.dataColheita),
+    areaHectares: area,
+  }
+}
+
+function parseObjetoCaderno(value: unknown): unknown {
+  if (value == null) return null
+  if (typeof value !== 'object') return null
+  return value
+}
+
+function parseCiclo(value: unknown): unknown {
+  if (!isRecord(value) || !Array.isArray(value.semanas)) return null
+  const semanas = value.semanas.filter((semana) => {
+    if (!isRecord(semana)) return false
+    return (
+      typeof semana.numero === 'number' &&
+      semana.numero >= 1 &&
+      semana.numero <= 42 &&
+      typeof semana.dataInicio === 'string' &&
+      typeof semana.dataFim === 'string'
+    )
+  })
+  if (value.semanas.length > 0 && semanas.length === 0) return null
+  return { ...value, semanas }
+}
+
 /** Confere se o JSON é uma cópia HexaVale antes de sobrescrever o caderno. */
 export function parsePacoteTitular(raw: unknown): PacoteTitular | null {
   if (!isRecord(raw)) return null
-  const temCaderno =
-    'propriedade' in raw ||
-    'produtor' in raw ||
-    'ciclo' in raw ||
-    'calda' in raw ||
-    'insumos' in raw ||
-    'maoDeObra' in raw ||
-    'catalogo' in raw ||
-    'safras' in raw ||
-    'custoCalda' in raw ||
-    'regulador' in raw ||
-    'calendario' in raw
-  if (!temCaderno) return null
-  return {
+  const pacote: PacoteTitular = {
     geradoEm: typeof raw.geradoEm === 'string' ? raw.geradoEm : new Date().toISOString(),
     politicaVersao: typeof raw.politicaVersao === 'string' ? raw.politicaVersao : '',
     finalidade: typeof raw.finalidade === 'string' ? raw.finalidade : '',
     consentimento: parseConsentimento(raw.consentimento),
-    propriedade: raw.propriedade ?? null,
-    produtor: raw.produtor ?? null,
-    calda: raw.calda ?? null,
-    insumos: raw.insumos ?? null,
-    maoDeObra: raw.maoDeObra ?? null,
-    ciclo: raw.ciclo ?? null,
-    catalogo: raw.catalogo ?? null,
-    safras: raw.safras ?? null,
-    custoCalda: raw.custoCalda ?? null,
-    regulador: raw.regulador ?? null,
-    calendario: raw.calendario ?? null,
+    propriedade: parsePropriedade(raw.propriedade),
+    produtor: parseProdutor(raw.produtor),
+    calda: parseObjetoCaderno(raw.calda),
+    insumos: parseObjetoCaderno(raw.insumos),
+    maoDeObra: parseObjetoCaderno(raw.maoDeObra),
+    ciclo: parseCiclo(raw.ciclo),
+    catalogo: parseObjetoCaderno(raw.catalogo),
+    safras: parseObjetoCaderno(raw.safras),
+    custoCalda: parseObjetoCaderno(raw.custoCalda),
+    regulador: parseObjetoCaderno(raw.regulador),
+    calendario: parseObjetoCaderno(raw.calendario),
   }
+  const temCaderno = Boolean(
+    pacote.propriedade ||
+      pacote.produtor ||
+      pacote.ciclo ||
+      pacote.calda ||
+      pacote.insumos ||
+      pacote.maoDeObra ||
+      pacote.catalogo ||
+      pacote.safras ||
+      pacote.custoCalda ||
+      pacote.regulador ||
+      pacote.calendario,
+  )
+  if (!temCaderno) return null
+  return pacote
 }
 
 export function restaurarDadosTitular(pacote: PacoteTitular) {
@@ -148,6 +214,9 @@ export function restaurarDadosTitular(pacote: PacoteTitular) {
 }
 
 export async function lerArquivoPacote(file: File): Promise<PacoteTitular> {
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error('Este arquivo é grande demais para uma cópia do Hexavale.')
+  }
   const texto = await file.text()
   let raw: unknown
   try {

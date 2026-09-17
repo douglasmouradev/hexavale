@@ -13,7 +13,6 @@ import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Input } from '@/components/ui/Input'
 import { Metric } from '@/components/ui/Metric'
 import { Select } from '@/components/ui/Select'
-import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { usePersistedState } from '@/hooks/usePersistedState'
@@ -33,7 +32,7 @@ import {
   type VariedadeManga,
 } from '@/lib/calendarioManga'
 import { formatCurrency, formatNumber, parseDecimal, cn } from '@/lib/format'
-import { exportarCalendarioPdf } from '@/lib/pdf'
+import { exportarCalendarioPdf } from '@/lib/exportarPdf'
 
 interface CalendarioState {
   dataAlvo: string
@@ -41,20 +40,18 @@ interface CalendarioState {
   selecionadaId: string
 }
 
-const PALMER = palmerPadrao()
+const INICIAL_VARIEDADE = variedadeSimples('Minha variedade', 60, 90, 30, 140)
 const INITIAL: CalendarioState = {
   dataAlvo: '',
-  variedades: [PALMER],
-  selecionadaId: PALMER.id,
+  variedades: [INICIAL_VARIEDADE],
+  selecionadaId: INICIAL_VARIEDADE.id,
 }
 
 export function CalendarioPage() {
   const { propriedade, produtor } = useApp()
-  const { showInterstitial } = useAds()
   const [form, setForm] = usePersistedState(STORAGE_KEYS.calendario, INITIAL)
   const [etapaAberta, setEtapaAberta] = useState<string | null>(null)
   const [semanaAberta, setSemanaAberta] = useState<string | null>(null)
-  const [aviso, setAviso] = useState('')
   const [editarOperacoes, setEditarOperacoes] = useState(false)
 
   useEffect(() => {
@@ -126,15 +123,6 @@ export function CalendarioPage() {
     }))
     setEtapaAberta(null)
     setSemanaAberta(null)
-  }
-
-  function handleCalcular() {
-    if (!form.dataAlvo) {
-      setAviso('Escolha a data desejada da colheita.')
-      return
-    }
-    setAviso('')
-    void showInterstitial('calculate')
   }
 
   if (produtor.cultura === 'uva') {
@@ -462,11 +450,6 @@ export function CalendarioPage() {
         <Banner>Escolha a data desejada da colheita para ver as etapas.</Banner>
       )}
 
-      {aviso ? <Banner tone="danger">{aviso}</Banner> : null}
-
-      <Button type="button" full onClick={handleCalcular}>
-        Calcular datas
-      </Button>
       <Button
         type="button"
         variant="secondary"
@@ -486,7 +469,7 @@ export function CalendarioPage() {
         Exportar PDF
       </Button>
       <Button type="button" variant="outline" full onClick={handleRestaurarPalmer}>
-        Restaurar Palmer de exemplo
+        Usar Palmer de exemplo
       </Button>
     </PageSplit>
   )

@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react'
-import { readStore, writeStore } from '@/storage/localStore'
+import { useState } from 'react'
+import { usePersistValue } from '@/hooks/usePersistValue'
+import { readStore } from '@/storage/localStore'
 
-/** Estado que grava sozinho no localStorage a cada alteração. */
+/** Estado que grava sozinho no localStorage (com atraso, para não travar a digitação). */
 export function usePersistedState<T>(key: string, initial: T) {
   const [state, setState] = useState<T>(() => readStore<T>(key) ?? initial)
-
-  useEffect(() => {
-    writeStore(key, state)
-  }, [key, state])
-
+  usePersistValue(key, state)
   return [state, setState] as const
 }

@@ -14,9 +14,9 @@ export function BottomNav() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex min-h-12 flex-col items-center justify-center gap-0.5 border-t-2 text-[11px] font-medium',
+                  'flex min-h-14 flex-col items-center justify-center gap-0.5 border-t-2 pt-1 text-xs font-semibold',
                   isActive
-                    ? 'border-mango text-field'
+                    ? 'border-mango bg-mango/10 text-field'
                     : 'border-transparent text-soil',
                 )
               }

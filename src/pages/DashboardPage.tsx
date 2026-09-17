@@ -1,17 +1,20 @@
 /** Home: semana e custo; ferramentas em linha de caderno, sem ícone colorido. */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { PrimeirosPassos } from '@/components/caderno/PrimeirosPassos'
+import { BOTTOM_NAV_PATHS } from '@/components/layout/navItems'
 import { InstalarAppCard } from '@/components/pwa/InstalarAppCard'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Metric } from '@/components/ui/Metric'
 import { useApp } from '@/context/AppContext'
-import { MODULE_GROUPS, culturaLabel, modulesVisiveis } from '@/data/modules'
 import { STORAGE_KEYS } from '@/data/constants'
+import { MODULE_GROUPS, culturaLabel, modulesVisiveis } from '@/data/modules'
 import { lancarItensDeTeste } from '@/lib/amostra'
-import { formatCurrency } from '@/lib/format'
 import { gerarSemanasCiclo, mesclarSemanas, semanaHoje, totaisCiclo } from '@/lib/ciclo'
+import { temCopiaPendente } from '@/lib/copia'
+import { formatCurrency } from '@/lib/format'
 import { lerSafras } from '@/lib/safra'
 import { readStore } from '@/storage/localStore'
 import type { CaldaFormState } from '@/hooks/useCaldaForm'
@@ -56,13 +59,15 @@ export function DashboardPage() {
   const ultimaSafra = lerSafras()[0]
 
   const visiveis = modulesVisiveis(produtor.cultura)
-  const mangaTools = visiveis.filter((module) => module.group === 'manga')
+  const atalhos = visiveis.filter((module) => !BOTTOM_NAV_PATHS.includes(module.to))
+  const precisaSetup = !produtor.cultura || !temData
+  const avisarCopia = temCopiaPendente()
 
   return (
     <div className="space-y-5">
       <div className="desk:hidden">
-        <p className="font-display text-base font-medium italic text-soil">{saudacao()}</p>
-        <h1 className="font-display text-[1.9rem] leading-[1.15] font-semibold text-field">
+        <p className="font-display text-sm font-medium italic text-soil">{saudacao()}</p>
+        <h1 className="font-display text-[1.65rem] leading-[1.15] font-semibold text-field">
           {propriedade?.nome}
         </h1>
       </div>
@@ -71,6 +76,11 @@ export function DashboardPage() {
       </p>
 
       <div className="grid gap-5 lg:grid-cols-5">
+        {precisaSetup ? (
+          <div className="lg:col-span-3">
+            <PrimeirosPassos />
+          </div>
+        ) : (
         <Card tone="field" className="space-y-4 lg:col-span-3">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -127,15 +137,39 @@ export function DashboardPage() {
             />
           ) : null}
 
-          <Link to={temData ? '/ciclo' : '/produtor'} className="block">
-            <Button full variant="secondary">
-              {temData ? 'Abrir ciclo' : 'Definir datas'}
+          <div className="grid grid-cols-2 gap-2">
+            <Link to="/mao-de-obra" className="block">
+              <Button full variant="secondary">
+                Lançar diária
+              </Button>
+            </Link>
+            <Link to="/insumos" className="block">
+              <Button full variant="outline" className="border-white/30 bg-white/10 text-white">
+                Lançar insumo
+              </Button>
+            </Link>
+          </div>
+          <Link to="/ciclo" className="block">
+            <Button full variant="ghost" className="text-mango-light">
+              Abrir ciclo
             </Button>
           </Link>
         </Card>
+        )}
 
         <div className="space-y-5 lg:col-span-2">
           <InstalarAppCard />
+
+          {avisarCopia ? (
+            <Link to="/meus-dados" className="block">
+              <Card>
+                <p className="font-medium text-field">Faça uma cópia do caderno</p>
+                <p className="mt-0.5 text-sm text-soil">
+                  Os custos ficam só neste aparelho. Exporte um JSON em Meus dados.
+                </p>
+              </Card>
+            </Link>
+          ) : null}
 
           {ultimaSafra ? (
             <Link to="/ciclo" className="block">
@@ -161,40 +195,23 @@ export function DashboardPage() {
       </div>
 
       <div className="desk:hidden">
-        {mangaTools.length ? (
-          <div className="mb-5">
-            <p className="mb-1 text-sm text-soil">Mangueira</p>
-            <div className="flex flex-wrap gap-2">
-              {mangaTools.map((module) => (
-                <Link
-                  key={module.to}
-                  to={module.to}
-                  className="rounded-chip bg-paper px-3 py-2 text-sm font-medium text-field shadow-paper"
-                >
-                  {module.title}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {MODULE_GROUPS.filter((group) => group.id === 'caderno').map((group) => {
-          const itens = visiveis.filter((module) => module.group === group.id)
+        {MODULE_GROUPS.map((group) => {
+          const itens = atalhos.filter((module) => module.group === group.id)
           if (!itens.length) return null
           return (
-            <div key={group.id}>
+            <div key={group.id} className="mb-5 last:mb-0">
               <p className="mb-1 text-sm text-soil">{group.label}</p>
               <Card className="grid grid-cols-1 gap-px overflow-hidden bg-line p-0">
                 {itens.map((module) => (
                   <Link
                     key={module.to}
                     to={module.to}
-                    className="flex items-baseline justify-between gap-3 bg-paper px-4 py-3 hover:bg-cream"
+                    className="flex min-h-14 items-center justify-between gap-3 bg-paper px-4 py-3"
                   >
                     <span>
                       <span className="block font-medium text-field">{module.title}</span>
                       <span className="block text-sm text-soil">{module.description}</span>
                     </span>
-                    <span className="text-sm text-mango">Abrir</span>
                   </Link>
                 ))}
               </Card>

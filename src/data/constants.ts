@@ -16,4 +16,6 @@ export const STORAGE_KEYS = {
   custoCalda: 'hexa-manga:custo-calda',
   regulador: 'hexa-manga:regulador',
   calendario: 'hexa-manga:calendario',
+  copiaPendente: 'hexa-manga:copia-pendente',
+  schema: 'hexa-manga:schema',
 } as const

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { UsarCatalogo } from '@/components/caderno/UsarCatalogo'
 import { PageSplit } from '@/components/layout/PageSplit'
+import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -93,9 +94,7 @@ export function CaldaOrganicaPage() {
       })
     }
     setCatalogoCalda(lerCatalogo().calda)
-    window.setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
+    scrollAoResultado(resultRef.current)
     void showInterstitial('calculate')
   }
 
@@ -136,8 +135,8 @@ export function CaldaOrganicaPage() {
                 <CaldaResultado
                   resultado={resultado}
                   onExportPdf={async () => {
-                    const { exportarCaldaPdf } = await import('@/lib/pdf')
-                    exportarCaldaPdf(resultado, propriedade, produtor)
+                    const { exportarCaldaPdf } = await import('@/lib/exportarPdf')
+                    await exportarCaldaPdf(resultado, propriedade, produtor)
                   }}
                 />
               </Suspense>
@@ -285,9 +284,11 @@ export function CaldaOrganicaPage() {
 
         {error ? <Banner tone="danger">{error}</Banner> : null}
 
-        <Button type="submit" full>
-          Calcular
-        </Button>
+        <StickyAction>
+          <Button type="submit" full>
+            Calcular
+          </Button>
+        </StickyAction>
       </PageSplit>
     </form>
   )

@@ -17,7 +17,7 @@ function formatQuando(iso: string | undefined) {
 }
 
 export function MeusDadosPage() {
-  const { propriedade, produtor, consentimento, apagarMeusDados, restaurarBackup } = useApp()
+  const { propriedade, produtor, consentimento, apagarMeusDados, restaurarBackup, logout } = useApp()
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmar, setConfirmar] = useState(false)
@@ -101,6 +101,16 @@ export function MeusDadosPage() {
       </div>
 
       <Card className="space-y-3">
+        <Button
+          full
+          variant="ghost"
+          onClick={() => {
+            logout()
+            navigate('/login', { replace: true })
+          }}
+        >
+          Sair
+        </Button>
         <Button full variant="secondary" onClick={() => baixarDadosTitular()}>
           Exportar cópia (JSON)
         </Button>

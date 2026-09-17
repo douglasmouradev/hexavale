@@ -1,8 +1,9 @@
 /** Regulador de crescimento: dose em mL/planta por porte, volume em L e custo. */
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
+import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -54,29 +55,31 @@ function emptyInsumo(): InsumoForm {
   }
 }
 
+const EXEMPLO_INSUMOS: InsumoForm[] = [
+  {
+    id: createId(),
+    nome: 'Paclo BR',
+    dosMaior: '30',
+    dosMedia: '25',
+    dosMenor: '20',
+    valorUnit: '48',
+  },
+  {
+    id: createId(),
+    nome: 'Ácido fúlvico',
+    dosMaior: '20',
+    dosMedia: '20',
+    dosMenor: '20',
+    valorUnit: '9,90',
+  },
+]
+
 const INITIAL: ReguladorState = {
   areaHa: '',
   plantasMaior: '',
   plantasMedia: '',
   plantasMenor: '',
-  insumos: [
-    {
-      id: createId(),
-      nome: 'Paclo BR',
-      dosMaior: '30',
-      dosMedia: '25',
-      dosMenor: '20',
-      valorUnit: '48',
-    },
-    {
-      id: createId(),
-      nome: 'Ácido fúlvico',
-      dosMaior: '20',
-      dosMedia: '20',
-      dosMenor: '20',
-      valorUnit: '9,90',
-    },
-  ],
+  insumos: [emptyInsumo()],
   resultado: null,
 }
 
@@ -85,6 +88,7 @@ export function ReguladorPage() {
   const { showInterstitial } = useAds()
   const [form, setForm] = usePersistedState(STORAGE_KEYS.regulador, INITIAL)
   const [error, setError] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (form.areaHa || !produtor.areaHectares) return
@@ -139,6 +143,7 @@ export function ReguladorPage() {
       insumos,
     })
     setForm((current) => ({ ...current, resultado }))
+    scrollAoResultado(resultRef.current)
     void showInterstitial('calculate')
   }
 
@@ -163,6 +168,7 @@ export function ReguladorPage() {
       <PageSplit
         aside={
           resultado ? (
+            <div ref={resultRef}>
             <Card className="space-y-4">
               <h2 className="text-lg font-bold text-ink">Resultado</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -189,6 +195,7 @@ export function ReguladorPage() {
                 </div>
               ))}
             </Card>
+            </div>
           ) : null
         }
       >
@@ -197,6 +204,20 @@ export function ReguladorPage() {
         <p className="text-sm text-soil">
           Dose em mL por planta. O volume sai em litros: (mL × plantas) / 1000.
         </p>
+        <Button
+          type="button"
+          variant="ghost"
+          full
+          onClick={() =>
+            setForm((current) => ({
+              ...current,
+              insumos: EXEMPLO_INSUMOS.map((item) => ({ ...item, id: createId() })),
+              resultado: null,
+            }))
+          }
+        >
+          Usar produtos de exemplo
+        </Button>
         <div className="grid gap-3 lg:grid-cols-2">
         <Input
           label="Área (ha)"
@@ -335,9 +356,11 @@ export function ReguladorPage() {
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      <Button type="submit" full>
-        Calcular
-      </Button>
+      <StickyAction>
+        <Button type="submit" full>
+          Calcular
+        </Button>
+      </StickyAction>
       </PageSplit>
     </form>
   )

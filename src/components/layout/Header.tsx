@@ -21,13 +21,13 @@ const TITLES: Record<string, string> = {
 export function Header() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { propriedade, produtor, logout } = useApp()
+  const { propriedade, produtor } = useApp()
   const isHome = pathname === '/'
   const title = TITLES[pathname] ?? 'Hexavale'
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-paper pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex w-full max-w-lg items-center gap-3 px-4 py-2.5 desk:max-w-6xl desk:px-8 desk:py-3.5">
+      <div className="mx-auto flex w-full max-w-lg items-center gap-2 px-3 py-2 desk:max-w-6xl desk:gap-3 desk:px-8 desk:py-3.5">
         {isHome ? (
           <>
             <div className="min-w-0 flex-1 desk:hidden">
@@ -41,35 +41,27 @@ export function Header() {
             </div>
           </>
         ) : (
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="text-sm font-medium text-field desk:hidden"
-              aria-label="Voltar"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-leaf text-field desk:hidden"
+              aria-label="Voltar ao início"
             >
-              Voltar
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M15 5 8 12l7 7" />
+              </svg>
             </button>
             <div className="min-w-0">
               <p className="font-display truncate text-xl font-semibold text-field desk:text-2xl">
                 {title}
               </p>
-              <p className="truncate text-sm text-soil">{propriedade?.nome}</p>
+              <p className="hidden truncate text-sm text-soil desk:block">{propriedade?.nome}</p>
             </div>
           </div>
         )}
 
         <ChipCultura cultura={produtor.cultura} />
-        <button
-          type="button"
-          onClick={() => {
-            logout()
-            navigate('/login', { replace: true })
-          }}
-          className="text-sm font-medium text-soil"
-        >
-          Sair
-        </button>
       </div>
     </header>
   )

@@ -1,8 +1,9 @@
 /** Formulário da calda persistido neste aparelho (inclui o último resultado). */
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { STORAGE_KEYS } from '@/data/constants'
+import { usePersistValue } from '@/hooks/usePersistValue'
 import { createId } from '@/lib/id'
-import { readStore, writeStore } from '@/storage/localStore'
+import { readStore } from '@/storage/localStore'
 import type { ResultadoCalda } from '@/lib/calda'
 import type { UnidadeDose } from '@/types/models'
 
@@ -48,9 +49,7 @@ export function useCaldaForm() {
     }
   })
 
-  useEffect(() => {
-    writeStore(STORAGE_KEYS.calda, form)
-  }, [form])
+  usePersistValue(STORAGE_KEYS.calda, form)
 
   return {
     form,

@@ -1,8 +1,9 @@
 /** Custo da calda em kg e R$: tanque, litro e hectare no ciclo. */
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
+import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -42,7 +43,7 @@ function emptyInsumo(): InsumoForm {
   return { id: createId(), nome: '', qtd: '', valorUnit: '' }
 }
 
-const INITIAL: CustoCaldaState = {
+const EXEMPLO: CustoCaldaState = {
   tankVolume: '10000',
   volPerHa: '200',
   numApps: '40',
@@ -56,10 +57,19 @@ const INITIAL: CustoCaldaState = {
   resultado: null,
 }
 
+const INITIAL: CustoCaldaState = {
+  tankVolume: '',
+  volPerHa: '',
+  numApps: '',
+  insumos: [emptyInsumo()],
+  resultado: null,
+}
+
 export function CustoCaldaPage() {
   const { showInterstitial } = useAds()
   const [form, setForm] = usePersistedState(STORAGE_KEYS.custoCalda, INITIAL)
   const [error, setError] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -93,6 +103,7 @@ export function CustoCaldaPage() {
     setError('')
     const resultado = calcularCustoCalda({ ...campos, insumos })
     setForm((current) => ({ ...current, resultado }))
+    scrollAoResultado(resultRef.current)
     void showInterstitial('calculate')
   }
 
@@ -124,6 +135,7 @@ export function CustoCaldaPage() {
       <PageSplit
         aside={
           resultado ? (
+            <div ref={resultRef}>
             <Card className="space-y-4">
               <h2 className="text-lg font-bold text-ink">Resultado</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -159,6 +171,7 @@ export function CustoCaldaPage() {
                 />
               ) : null}
             </Card>
+            </div>
           ) : null
         }
       >
@@ -166,8 +179,23 @@ export function CustoCaldaPage() {
         <h2 className="text-lg font-bold text-ink">Tanque e ciclo</h2>
         <p className="text-sm text-soil">
           Complementa a Calda: aqui o custo entra em kg e R$/kg, não em dose por litro.
-          A receita abaixo é um exemplo — pode limpar e lançar a da fazenda.
         </p>
+        <Button
+          type="button"
+          variant="ghost"
+          full
+          onClick={() =>
+            setForm({
+              tankVolume: EXEMPLO.tankVolume,
+              volPerHa: EXEMPLO.volPerHa,
+              numApps: EXEMPLO.numApps,
+              insumos: EXEMPLO.insumos.map((item) => ({ ...item, id: createId() })),
+              resultado: null,
+            })
+          }
+        >
+          Usar receita de exemplo
+        </Button>
         {podeCopiarTanque ? (
           <Button type="button" variant="outline" full onClick={copiarTanqueDaCalda}>
             Usar tanque da Calda
@@ -281,7 +309,7 @@ export function CustoCaldaPage() {
         Adicionar insumo
       </Button>
       <Button type="button" variant="ghost" full onClick={limparReceita}>
-        Limpar receita de exemplo
+        Limpar receita
       </Button>
       <Link to="/calda" className="block text-center text-sm font-semibold text-field">
         Voltar para a Calda
@@ -289,9 +317,11 @@ export function CustoCaldaPage() {
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      <Button type="submit" full>
-        Calcular
-      </Button>
+      <StickyAction>
+        <Button type="submit" full>
+          Calcular
+        </Button>
+      </StickyAction>
       </PageSplit>
     </form>
   )

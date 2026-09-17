@@ -1,8 +1,9 @@
 /** Diária e serviços. O total lança na semana atual do ciclo. */
-import { useEffect, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
+import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -12,11 +13,12 @@ import { Select } from '@/components/ui/Select'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
+import { usePersistValue } from '@/hooks/usePersistValue'
 import { lancarMaoDeObraNoCiclo, mensagemLancamento } from '@/lib/caderno'
 import { formatCurrency, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
-import { exportarMaoDeObraPdf } from '@/lib/pdf'
-import { readStore, writeStore } from '@/storage/localStore'
+import { exportarMaoDeObraPdf } from '@/lib/exportarPdf'
+import { readStore } from '@/storage/localStore'
 import type { UnidadeTempo } from '@/types/models'
 
 interface AtividadeForm {
@@ -68,10 +70,9 @@ export function MaoDeObraPage() {
   const [form, setForm] = useState<MaoDeObraState>(loadMaoDeObra)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    writeStore(STORAGE_KEYS.maoDeObra, form)
-  }, [form])
+  usePersistValue(STORAGE_KEYS.maoDeObra, form)
 
   const atividades = form.atividades
   const linhas = form.resultado
@@ -110,6 +111,7 @@ export function MaoDeObraPage() {
     setError('')
     setAviso('')
     setForm((current) => ({ ...current, resultado: calculadas }))
+    scrollAoResultado(resultRef.current)
     void showInterstitial('calculate')
   }
 
@@ -126,6 +128,7 @@ export function MaoDeObraPage() {
       <PageSplit
         aside={
           linhas ? (
+            <div ref={resultRef}>
             <Card className="space-y-3">
               <GraficoPizza
                 centro={formatCurrency(total)}
@@ -162,6 +165,7 @@ export function MaoDeObraPage() {
                 Exportar PDF
               </Button>
             </Card>
+            </div>
           ) : null
         }
       >
@@ -248,9 +252,11 @@ export function MaoDeObraPage() {
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      <Button type="submit" full>
-        Calcular
-      </Button>
+      <StickyAction>
+        <Button type="submit" full>
+          Calcular
+        </Button>
+      </StickyAction>
       </PageSplit>
     </form>
   )

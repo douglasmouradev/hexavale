@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { DateField } from '@/components/ui/DateField'
 import { Input } from '@/components/ui/Input'
+import { StickyAction } from '@/components/layout/StickyAction'
 import { PageTitle } from '@/components/ui/PageTitle'
 import { useApp } from '@/context/AppContext'
 import { CICLO_SEMANAS } from '@/data/constants'
@@ -130,9 +131,11 @@ export function ProdutorPage() {
 
       {saved ? <Banner>Dados do produtor salvos neste aparelho.</Banner> : null}
 
-      <Button type="submit" full disabled={!cultura}>
-        Salvar
-      </Button>
+      <StickyAction>
+        <Button type="submit" full disabled={!cultura}>
+          Salvar
+        </Button>
+      </StickyAction>
     </form>
   )
 }

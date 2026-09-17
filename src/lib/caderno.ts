@@ -3,6 +3,7 @@
  * Relançar na mesma origem substitui as linhas anteriores, sem duplicar.
  */
 import { STORAGE_KEYS } from '@/data/constants'
+import { marcarCopiaPendente } from '@/lib/copia'
 import {
   gerarSemanasCiclo,
   mesclarSemanas,
@@ -97,6 +98,7 @@ export function lancarInsumosNoCiclo(
         : semana,
     ),
   )
+  marcarCopiaPendente()
   return { ok: true, semana: alvo.numero, trabalho: alvo.tipoTrabalho }
 }
 
@@ -133,6 +135,7 @@ export function lancarMaoDeObraNoCiclo(
         : semana,
     ),
   )
+  marcarCopiaPendente()
   return { ok: true, semana: alvo.numero, trabalho: alvo.tipoTrabalho }
 }
 

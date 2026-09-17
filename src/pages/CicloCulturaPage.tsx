@@ -23,7 +23,7 @@ import {
   totaisCiclo,
 } from '@/lib/ciclo'
 import { cn, formatCurrency, parseDecimal } from '@/lib/format'
-import { exportarCicloPdf } from '@/lib/pdf'
+import { exportarCicloPdf } from '@/lib/exportarPdf'
 import { fecharSafraAtual, lerSafras, produtorAposFechar } from '@/lib/safra'
 import type { CicloCultura, MaoDeObraSemana, SafraArquivada, SemanaCiclo } from '@/types/models'
 
@@ -175,6 +175,39 @@ export function CicloCulturaPage() {
             Agora: semana {alvo.numero} · {alvo.tipoTrabalho}
           </p>
         ) : null}
+        <div className="grid grid-cols-2 gap-2">
+          <Link to="/mao-de-obra" className="block">
+            <Button full variant="secondary">
+              Lançar diária
+            </Button>
+          </Link>
+          <Link to="/insumos" className="block">
+            <Button full variant="outline" className="border-white/30 bg-white/10 text-white">
+              Lançar insumo
+            </Button>
+          </Link>
+        </div>
+        {alvo ? (
+          <Button
+            full
+            variant="ghost"
+            className="text-mango-light"
+            onClick={() => {
+              setUsuarioEscolheuFase(true)
+              setFaseAberta(chaveAlvo)
+              setUsuarioEscolheuSemana(true)
+              setAberta(alvo.numero)
+              window.setTimeout(() => {
+                document.getElementById('semana-atual')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                })
+              }, 50)
+            }}
+          >
+            Ir para a semana de hoje
+          </Button>
+        ) : null}
         {totais.geral > 0 ? (
           <GraficoPizza
             invert
@@ -195,7 +228,7 @@ export function CicloCulturaPage() {
       </Card>
 
       {totais.geral > 0 ? (
-        <Card className="space-y-3">
+        <Card className="hidden space-y-3 lg:block">
           <p className="font-medium text-ink">Custo por fase</p>
           <GraficoPizza
             centro="Fases"
@@ -387,7 +420,10 @@ function SemanaEditor({
   const diarias = maoLancada(semana)
 
   return (
-    <div className="space-y-3 border border-line bg-cream/50 p-3">
+    <div
+      id={atual ? 'semana-atual' : undefined}
+      className="space-y-3 border border-line bg-cream/50 p-3"
+    >
       <button
         type="button"
         className="flex w-full items-start justify-between gap-3 text-left"

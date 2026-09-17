@@ -1,8 +1,9 @@
 /** Custo de produtos por porte de planta. Depois do cálculo, lança na semana atual. */
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
+import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -21,7 +22,7 @@ import {
 } from '@/lib/catalogo'
 import { formatCurrency, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
-import { exportarInsumosPdf } from '@/lib/pdf'
+import { exportarInsumosPdf } from '@/lib/exportarPdf'
 
 interface ProdutoForm {
   id: string
@@ -63,6 +64,7 @@ export function InsumosPage() {
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
   const [catalogoInsumos, setCatalogoInsumos] = useState(() => lerCatalogo().insumos)
+  const resultRef = useRef<HTMLDivElement>(null)
   const linhas = form.resultado ?? null
 
   function emptyProduto(): ProdutoForm {
@@ -116,6 +118,7 @@ export function InsumosPage() {
       })
     }
     setCatalogoInsumos(lerCatalogo().insumos)
+    scrollAoResultado(resultRef.current)
     void showInterstitial('calculate')
   }
 
@@ -159,6 +162,7 @@ export function InsumosPage() {
       <PageSplit
         aside={
           linhas ? (
+            <div ref={resultRef}>
             <Card className="space-y-3">
               <GraficoPizza
                 centro={formatCurrency(total)}
@@ -198,6 +202,7 @@ export function InsumosPage() {
                 Exportar PDF
               </Button>
             </Card>
+            </div>
           ) : null
         }
       >
@@ -339,9 +344,11 @@ export function InsumosPage() {
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      <Button type="submit" full>
-        Calcular
-      </Button>
+      <StickyAction>
+        <Button type="submit" full>
+          Calcular
+        </Button>
+      </StickyAction>
       </PageSplit>
     </form>
   )

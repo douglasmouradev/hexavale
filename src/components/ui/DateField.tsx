@@ -1,5 +1,6 @@
 /** Calendário em português: o seletor nativo do Chrome segue o idioma do Windows. */
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/format'
 
 const MESES = [
@@ -27,6 +28,8 @@ const DIAS = [
   { curto: 'S', nome: 'sábado' },
 ]
 
+const DESK = '(min-width: 56.25rem)'
+
 function pad(value: number) {
   return String(value).padStart(2, '0')
 }
@@ -53,6 +56,10 @@ function partesDoIso(iso: string) {
   return { ano, mes: mes - 1, dia }
 }
 
+function ehCelular() {
+  return typeof window === 'undefined' || !window.matchMedia(DESK).matches
+}
+
 export function DateField({
   label,
   name,
@@ -68,11 +75,23 @@ export function DateField({
 }) {
   const id = useId()
   const rootRef = useRef<HTMLDivElement>(null)
+  const folhaRef = useRef<HTMLDivElement>(null)
   const [aberto, setAberto] = useState(false)
+  const [folha, setFolha] = useState(ehCelular)
   const [visivel, setVisivel] = useState(() => {
     const base = partesDoIso(value) ?? partesDoIso(hojeIso())!
     return { ano: base.ano, mes: base.mes }
   })
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESK)
+    function sync() {
+      setFolha(!mq.matches)
+    }
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     if (!aberto) return
@@ -80,10 +99,25 @@ export function DateField({
     setVisivel({ ano: base.ano, mes: base.mes })
   }, [aberto, value])
 
+  useLayoutEffect(() => {
+    if (!aberto || !folha) return
+    const y = window.scrollY
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.scrollTo(0, y)
+    return () => {
+      document.body.style.overflow = overflow
+      window.scrollTo(0, y)
+    }
+  }, [aberto, folha])
+
   useEffect(() => {
     if (!aberto) return
     function fechar(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setAberto(false)
+      const alvo = event.target as Node
+      if (rootRef.current?.contains(alvo)) return
+      if (folhaRef.current?.contains(alvo)) return
+      setAberto(false)
     }
     function tecla(event: KeyboardEvent) {
       if (event.key === 'Escape') setAberto(false)
@@ -115,7 +149,86 @@ export function DateField({
     })
   }
 
+  function escolher(iso: string) {
+    onChange(iso)
+    setAberto(false)
+  }
+
   const hoje = hojeIso()
+
+  const painel = (
+    <>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          className="flex h-11 w-11 items-center justify-center rounded-leaf text-field"
+          aria-label="Mês anterior"
+          onClick={() => mudarMes(-1)}
+        >
+          ‹
+        </button>
+        <p className="font-display text-lg font-semibold text-field">
+          {MESES[visivel.mes]} de {visivel.ano}
+        </p>
+        <button
+          type="button"
+          className="flex h-11 w-11 items-center justify-center rounded-leaf text-field"
+          aria-label="Próximo mês"
+          onClick={() => mudarMes(1)}
+        >
+          ›
+        </button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {DIAS.map((dia, index) => (
+          <span
+            key={`${dia.nome}-${index}`}
+            title={dia.nome}
+            className="py-1 text-[11px] font-semibold text-soil"
+          >
+            {dia.curto}
+          </span>
+        ))}
+        {celulas.map((celula, index) =>
+          celula ? (
+            <button
+              key={celula.iso}
+              type="button"
+              onClick={() => escolher(celula.iso)}
+              className={cn(
+                'flex h-11 items-center justify-center rounded-leaf text-sm font-medium',
+                celula.iso === value && 'bg-field text-cream',
+                celula.iso !== value && celula.iso === hoje && 'bg-mango/15 text-field',
+                celula.iso !== value && celula.iso !== hoje && 'text-ink',
+              )}
+            >
+              {celula.dia}
+            </button>
+          ) : (
+            <span key={`vazio-${index}`} />
+          ),
+        )}
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          className="flex-1 rounded-leaf py-2.5 text-sm font-semibold text-field"
+          onClick={() => escolher(hoje)}
+        >
+          Hoje
+        </button>
+        {value ? (
+          <button
+            type="button"
+            className="flex-1 rounded-leaf py-2.5 text-sm font-semibold text-soil"
+            onClick={() => escolher('')}
+          >
+            Limpar
+          </button>
+        ) : null}
+      </div>
+    </>
+  )
 
   return (
     <div ref={rootRef} className="relative block space-y-1.5">
@@ -133,90 +246,35 @@ export function DateField({
       >
         {value ? formatarDataBr(value) : <span className="text-soil/30">dd/mm/aaaa</span>}
       </button>
-      {aberto ? (
+      {aberto && folha
+        ? createPortal(
+            <>
+              <div
+                className="fixed inset-0 z-40 bg-ink/40"
+                role="presentation"
+                onClick={() => setAberto(false)}
+              />
+              <div
+                ref={folhaRef}
+                role="dialog"
+                aria-label="Escolher data"
+                className="fixed inset-x-3 z-50 rounded-leaf border border-line bg-paper p-3 shadow-lift"
+                style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+              >
+                {painel}
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
+      {aberto && !folha ? (
         <div
+          ref={folhaRef}
           role="dialog"
           aria-label="Escolher data"
           className="absolute z-30 mt-1 w-full min-w-[18rem] rounded-leaf border border-line bg-paper p-3 shadow-lift"
         >
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-leaf text-field"
-              aria-label="Mês anterior"
-              onClick={() => mudarMes(-1)}
-            >
-              ‹
-            </button>
-            <p className="font-display text-lg font-bold text-field">
-              {MESES[visivel.mes]} de {visivel.ano}
-            </p>
-            <button
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-leaf text-field"
-              aria-label="Próximo mês"
-              onClick={() => mudarMes(1)}
-            >
-              ›
-            </button>
-          </div>
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {DIAS.map((dia, index) => (
-              <span
-                key={`${dia.nome}-${index}`}
-                title={dia.nome}
-                className="py-1 text-[11px] font-semibold text-soil"
-              >
-                {dia.curto}
-              </span>
-            ))}
-            {celulas.map((celula, index) =>
-              celula ? (
-                <button
-                  key={celula.iso}
-                  type="button"
-                  onClick={() => {
-                    onChange(celula.iso)
-                    setAberto(false)
-                  }}
-                  className={cn(
-                    'flex h-10 items-center justify-center rounded-leaf text-sm font-medium',
-                    celula.iso === value && 'bg-field text-cream',
-                    celula.iso !== value && celula.iso === hoje && 'bg-mango/15 text-field',
-                    celula.iso !== value && celula.iso !== hoje && 'text-ink hover:bg-cream',
-                  )}
-                >
-                  {celula.dia}
-                </button>
-              ) : (
-                <span key={`vazio-${index}`} />
-              ),
-            )}
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              className="flex-1 rounded-leaf py-2 text-sm font-semibold text-field"
-              onClick={() => {
-                onChange(hoje)
-                setAberto(false)
-              }}
-            >
-              Hoje
-            </button>
-            {value ? (
-              <button
-                type="button"
-                className="flex-1 rounded-leaf py-2 text-sm font-semibold text-soil"
-                onClick={() => {
-                  onChange('')
-                  setAberto(false)
-                }}
-              >
-                Limpar
-              </button>
-            ) : null}
-          </div>
+          {painel}
         </div>
       ) : null}
       {hint ? <span className="block text-sm text-soil">{hint}</span> : null}

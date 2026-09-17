@@ -102,15 +102,18 @@ const upload = multer({
   }),
   limits: { fileSize: 80 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const ok = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'].includes(
+    const ext = path.extname(file.originalname).toLowerCase()
+    const mimeOk = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'].includes(
       file.mimetype,
     )
+    const extOk = ['.mp4', '.webm', '.ogg', '.mov'].includes(ext)
+    const ok = mimeOk && extOk
     cb(ok ? null : new Error('Envie um vídeo MP4, WebM ou MOV.'), ok)
   },
 })
 
 function signAdmin(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: `${TOKEN_HOURS}h` })
+  return jwt.sign(payload, JWT_SECRET, { algorithm: 'HS256', expiresIn: `${TOKEN_HOURS}h` })
 }
 
 function authAdmin(req, res, next) {
@@ -121,7 +124,7 @@ function authAdmin(req, res, next) {
     return
   }
   try {
-    req.admin = jwt.verify(token, JWT_SECRET)
+    req.admin = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] })
     next()
   } catch {
     res.status(401).json({ error: 'Sessão expirada. Entre de novo.' })
@@ -194,11 +197,26 @@ async function ensureSchema() {
 }
 
 const app = express()
+app.disable('x-powered-by')
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('Referrer-Policy', 'same-origin')
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  next()
+})
 if (!serveApp) {
-  app.use(cors({ origin: true }))
+  const origem = process.env.CORS_ORIGIN
+  app.use(cors({ origin: origem || true }))
 }
-app.use(express.json())
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+app.use(express.json({ limit: '32kb' }))
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, 'uploads'), {
+    fallthrough: false,
+    index: false,
+  }),
+)
 
 app.get('/api/health', async (_req, res) => {
   try {
@@ -212,6 +230,17 @@ app.get('/api/health', async (_req, res) => {
   }
 })
 
+const tentativasLogin = new Map()
+const JANELA_LOGIN_MS = 15 * 60 * 1000
+const MAX_FALHAS_LOGIN = 8
+
+function falhasLogin(email) {
+  const agora = Date.now()
+  const lista = (tentativasLogin.get(email) || []).filter((t) => agora - t < JANELA_LOGIN_MS)
+  tentativasLogin.set(email, lista)
+  return lista
+}
+
 app.post('/api/admin/login', async (req, res) => {
   const email = String(req.body?.email || '')
     .trim()
@@ -221,15 +250,21 @@ app.post('/api/admin/login', async (req, res) => {
     res.status(400).json({ error: 'Informe e-mail e senha.' })
     return
   }
+  if (falhasLogin(email).length >= MAX_FALHAS_LOGIN) {
+    res.status(429).json({ error: 'Muitas tentativas. Espere alguns minutos.' })
+    return
+  }
 
   const [rows] = await pool.query('SELECT * FROM admins WHERE email = ? LIMIT 1', [
     email,
   ])
   const admin = rows[0]
   if (!admin || !(await bcrypt.compare(senha, admin.senha_hash))) {
+    falhasLogin(email).push(Date.now())
     res.status(401).json({ error: 'E-mail ou senha inválidos.' })
     return
   }
+  tentativasLogin.delete(email)
 
   const token = signAdmin({ id: admin.id, email: admin.email, nome: admin.nome })
   res.json({ token, admin: { id: admin.id, nome: admin.nome, email: admin.email } })
@@ -315,8 +350,11 @@ app.delete('/api/admin/videos/:id', authAdmin, async (req, res) => {
     return
   }
   await pool.query('DELETE FROM ad_videos WHERE id = ?', [id])
-  const filePath = path.join(uploadsDir, video.arquivo)
-  fs.unlink(filePath, () => {})
+  const nome = path.basename(String(video.arquivo || ''))
+  const filePath = path.resolve(uploadsDir, nome)
+  if (filePath.startsWith(path.resolve(uploadsDir) + path.sep)) {
+    fs.unlink(filePath, () => {})
+  }
   res.json({ ok: true })
 })
 

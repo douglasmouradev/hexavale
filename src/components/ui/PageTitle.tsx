@@ -8,8 +8,10 @@ export function PageTitle({
 }) {
   return (
     <div>
-      <h2 className="font-display text-[1.7rem] leading-[1.2] font-semibold text-field">{title}</h2>
-      {subtitle ? <p className="mt-1 text-sm text-soil">{subtitle}</p> : null}
+      <h2 className="font-display hidden text-[1.7rem] leading-[1.2] font-semibold text-field desk:block">
+        {title}
+      </h2>
+      {subtitle ? <p className="text-sm text-soil desk:mt-1">{subtitle}</p> : null}
     </div>
   )
 }

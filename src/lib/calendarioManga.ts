@@ -316,3 +316,47 @@ export function variedadeSimples(name: string, p1: number, p2: number, p3: numbe
     ],
   }
 }
+
+function opOcupada(op: OperacaoSemana) {
+  return Boolean(op.name.trim() || op.labor.prod > 0 || op.machine.produtividade > 0)
+}
+
+function semanaOcupada(week: SemanaEtapa) {
+  return week.ops.some(opOcupada)
+}
+
+/** Tira semanas vazias para o caderno no aparelho ocupar menos espaço. */
+export function compactarVariedade(variedade: VariedadeManga): VariedadeManga {
+  return {
+    ...variedade,
+    stages: variedade.stages.map((etapa) => ({
+      ...etapa,
+      weeks: (etapa.weeks ?? []).filter(semanaOcupada),
+    })),
+  }
+}
+
+/** Recria os intervalos para o editor, copiando o que já estava gravado. */
+export function expandirVariedade(variedade: VariedadeManga): VariedadeManga {
+  return {
+    ...variedade,
+    stages: variedade.stages.map((etapa) => {
+      if (etapa.days == null) return etapa
+      return { ...etapa, weeks: regenerateWeeks(etapa, variedade.talhao) }
+    }),
+  }
+}
+
+function temVariedades(value: unknown): value is { variedades: VariedadeManga[] } {
+  return Boolean(value) && typeof value === 'object' && Array.isArray((value as { variedades?: unknown }).variedades)
+}
+
+export function compactarCalendarioState<T>(state: T): T {
+  if (!temVariedades(state)) return state
+  return { ...state, variedades: state.variedades.map(compactarVariedade) }
+}
+
+export function expandirCalendarioState<T>(state: T): T {
+  if (!temVariedades(state)) return state
+  return { ...state, variedades: state.variedades.map(expandirVariedade) }
+}

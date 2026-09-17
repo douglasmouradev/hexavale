@@ -1,5 +1,6 @@
+/** Upload e ativação dos vídeos que o app mostra no anúncio. */
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -146,6 +147,13 @@ export function AdminVideosPage() {
           </Card>
         ))}
       </div>
+
+      <Link
+        to="/privacidade"
+        className="mt-6 block pb-6 text-center text-sm font-semibold text-mango"
+      >
+        Política de Privacidade
+      </Link>
     </div>
   )
 }

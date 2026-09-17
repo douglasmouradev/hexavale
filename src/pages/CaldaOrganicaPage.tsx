@@ -1,4 +1,5 @@
-import { useRef, useState, lazy, Suspense, type FormEvent } from 'react'
+/** Calda orgânica: tanque, área (pré-preenchida do Produtor) e receita. */
+import { useEffect, useRef, useState, lazy, Suspense, type FormEvent } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -22,9 +23,16 @@ export function CaldaOrganicaPage() {
   const { showInterstitial } = useAds()
   const { form, setForm, addInsumo, removeInsumo, updateInsumo } = useCaldaForm()
   const [error, setError] = useState('')
-  const [calculating, setCalculating] = useState(false)
   const [resultado, setResultado] = useState<ResultadoCalda | null>(form.resultado)
   const resultRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Só preenche se o campo da calda estiver vazio — o produtor pode usar outra área.
+    if (form.areaHectares || !produtor.areaHectares) return
+    setForm((current) =>
+      current.areaHectares ? current : { ...current, areaHectares: produtor.areaHectares ?? '' },
+    )
+  }, [form.areaHectares, produtor.areaHectares, setForm])
 
   async function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -62,18 +70,14 @@ export function CaldaOrganicaPage() {
       return
     }
 
-    setCalculating(true)
-    try {
-      await showInterstitial('calculate')
-      const next = calcularCalda({ ...campos, insumos, tanqueParcial: form.tanqueParcial })
-      setResultado(next)
-      setForm((current) => ({ ...current, resultado: next }))
-      window.setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 50)
-    } finally {
-      setCalculating(false)
-    }
+    setError('')
+    const next = calcularCalda({ ...campos, insumos, tanqueParcial: form.tanqueParcial })
+    setResultado(next)
+    setForm((current) => ({ ...current, resultado: next }))
+    window.setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+    void showInterstitial('calculate')
   }
 
   return (
@@ -95,7 +99,12 @@ export function CaldaOrganicaPage() {
             label="Área (ha)"
             name="area"
             inputMode="decimal"
-            placeholder="10"
+            placeholder={produtor.areaHectares || '10'}
+            hint={
+              produtor.areaHectares && form.areaHectares === produtor.areaHectares
+                ? 'Veio de Produtor. Pode alterar se esta calda for em outra área.'
+                : undefined
+            }
             value={form.areaHectares}
             onChange={(event) =>
               setForm((current) => ({ ...current, areaHectares: event.target.value }))
@@ -209,8 +218,8 @@ export function CaldaOrganicaPage() {
           </p>
         ) : null}
 
-        <Button type="submit" full disabled={calculating}>
-          {calculating ? 'Calculando...' : 'Calcular'}
+        <Button type="submit" full>
+          Calcular
         </Button>
       </form>
 

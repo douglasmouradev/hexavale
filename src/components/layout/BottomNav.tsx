@@ -1,3 +1,4 @@
+/** Navegação fixa no polegar: Início, Calda, Ciclo, Insumos, Diária. */
 import { NavLink } from 'react-router-dom'
 
 const ITEMS = [

@@ -1,3 +1,4 @@
+/** Telefone BR, moeda e número com vírgula (campo de produtor). */
 export function cn(
   ...parts: Array<string | false | null | undefined>
 ): string {

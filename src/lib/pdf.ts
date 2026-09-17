@@ -1,3 +1,4 @@
+/** PDFs gerados no aparelho (calda, insumos, diária, ciclo). O arquivo só sai se o produtor exportar. */
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { culturaLabel } from '@/data/modules'

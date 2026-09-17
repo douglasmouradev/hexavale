@@ -1,3 +1,4 @@
+/** Atalhos da home: uma linha por ferramenta do caderno. */
 import type { Cultura } from '@/types/models'
 
 export interface AppModule {
@@ -10,7 +11,7 @@ export const APP_MODULES: AppModule[] = [
   {
     to: '/produtor',
     title: 'Produtor',
-    description: 'Cultura e datas da safra',
+    description: 'Cultura, área e datas da safra',
   },
   {
     to: '/calda',

@@ -1,3 +1,4 @@
+/** Leitura/gravação JSON no localStorage. JSON inválido vira null, sem quebrar o app. */
 export function readStore<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(key)

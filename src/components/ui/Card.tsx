@@ -1,3 +1,4 @@
+/** Cartão da interface: fundo claro ou verde (hero). */
 import type { HTMLAttributes } from 'react'
 import { cn } from '@/lib/format'
 

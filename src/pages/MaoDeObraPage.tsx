@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from 'react'
+/** Diária e serviços. O total lança na semana atual do ciclo. */
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -7,10 +9,11 @@ import { Select } from '@/components/ui/Select'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
-import { usePersistedState } from '@/hooks/usePersistedState'
+import { lancarMaoDeObraNoCiclo, mensagemLancamento } from '@/lib/caderno'
 import { formatCurrency, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { exportarMaoDeObraPdf } from '@/lib/pdf'
+import { readStore, writeStore } from '@/storage/localStore'
 import type { UnidadeTempo } from '@/types/models'
 
 interface AtividadeForm {
@@ -27,6 +30,11 @@ interface Linha {
   custo: number
 }
 
+interface MaoDeObraState {
+  atividades: AtividadeForm[]
+  resultado: Linha[] | null
+}
+
 const SUGESTOES = ['Poda', 'Pulverização', 'Capina', 'Colheita', 'Irrigação', 'Adubação']
 
 function emptyAtividade(): AtividadeForm {
@@ -40,19 +48,38 @@ function emptyAtividade(): AtividadeForm {
   }
 }
 
+function loadMaoDeObra(): MaoDeObraState {
+  const raw = readStore<MaoDeObraState | AtividadeForm[]>(STORAGE_KEYS.maoDeObra)
+  if (Array.isArray(raw) && raw.length) {
+    return { atividades: raw, resultado: null }
+  }
+  if (raw && !Array.isArray(raw) && Array.isArray(raw.atividades) && raw.atividades.length) {
+    return { atividades: raw.atividades, resultado: raw.resultado ?? null }
+  }
+  return { atividades: [emptyAtividade()], resultado: null }
+}
+
 export function MaoDeObraPage() {
   const { propriedade, produtor } = useApp()
   const { showInterstitial } = useAds()
-  const [atividades, setAtividades] = usePersistedState<AtividadeForm[]>(
-    STORAGE_KEYS.maoDeObra,
-    [emptyAtividade()],
-  )
-  const [linhas, setLinhas] = useState<Linha[] | null>(null)
+  const [form, setForm] = useState<MaoDeObraState>(loadMaoDeObra)
   const [error, setError] = useState('')
-  const [calculating, setCalculating] = useState(false)
+  const [aviso, setAviso] = useState('')
+
+  useEffect(() => {
+    writeStore(STORAGE_KEYS.maoDeObra, form)
+  }, [form])
+
+  const atividades = form.atividades
+  const linhas = form.resultado
 
   function update(id: string, patch: Partial<AtividadeForm>) {
-    setAtividades(atividades.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+    setForm((current) => ({
+      ...current,
+      atividades: current.atividades.map((item) =>
+        item.id === id ? { ...item, ...patch } : item,
+      ),
+    }))
   }
 
   async function handleCalculate(event: FormEvent<HTMLFormElement>) {
@@ -78,13 +105,15 @@ export function MaoDeObraPage() {
       return
     }
     setError('')
-    setCalculating(true)
-    try {
-      await showInterstitial('calculate')
-      setLinhas(calculadas)
-    } finally {
-      setCalculating(false)
-    }
+    setAviso('')
+    setForm((current) => ({ ...current, resultado: calculadas }))
+    void showInterstitial('calculate')
+  }
+
+  function handleLancar() {
+    if (!linhas?.length) return
+    const result = lancarMaoDeObraNoCiclo(produtor, linhas)
+    setAviso(mensagemLancamento(result))
   }
 
   const total = linhas?.reduce((sum, item) => sum + item.custo, 0) ?? 0
@@ -99,11 +128,13 @@ export function MaoDeObraPage() {
               type="button"
               className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cream"
               onClick={() =>
-                setAtividades(
-                  atividades.length > 1
-                    ? atividades.filter((item) => item.id !== atividade.id)
-                    : [emptyAtividade()],
-                )
+                setForm((current) => ({
+                  ...current,
+                  atividades:
+                    current.atividades.length > 1
+                      ? current.atividades.filter((item) => item.id !== atividade.id)
+                      : [emptyAtividade()],
+                }))
               }
             >
               <Trash2 className="h-5 w-5" />
@@ -159,7 +190,12 @@ export function MaoDeObraPage() {
         type="button"
         variant="outline"
         full
-        onClick={() => setAtividades([...atividades, emptyAtividade()])}
+        onClick={() =>
+          setForm((current) => ({
+            ...current,
+            atividades: [...current.atividades, emptyAtividade()],
+          }))
+        }
       >
         <Plus className="mr-2 h-5 w-5" />
         Adicionar serviço
@@ -180,6 +216,21 @@ export function MaoDeObraPage() {
             </div>
           ))}
           <p className="text-lg font-bold">Total {formatCurrency(total)}</p>
+          {aviso ? (
+            <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
+              {aviso}
+            </p>
+          ) : null}
+          <Button type="button" full onClick={handleLancar}>
+            Lançar na semana atual
+          </Button>
+          {aviso.startsWith('Lançado') ? (
+            <Link to="/ciclo" className="block">
+              <Button type="button" variant="outline" full>
+                Ver no ciclo
+              </Button>
+            </Link>
+          ) : null}
           <Button
             type="button"
             variant="secondary"
@@ -191,8 +242,8 @@ export function MaoDeObraPage() {
         </Card>
       ) : null}
 
-      <Button type="submit" full disabled={calculating}>
-        {calculating ? 'Calculando...' : 'Calcular'}
+      <Button type="submit" full>
+        Calcular
       </Button>
     </form>
   )

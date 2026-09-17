@@ -1,3 +1,4 @@
+/** Sem sessão local (telefone + propriedade) não entra no caderno. */
 import { Navigate, Outlet } from 'react-router-dom'
 import { useApp } from '@/context/AppContext'
 

@@ -1,3 +1,7 @@
+/**
+ * Anúncio em tela cheia. Não trava o cálculo: se não houver vídeo ou
+ * se o último anúncio foi há menos de 15 min, a Promise resolve na hora.
+ */
 import {
   createContext,
   useCallback,
@@ -7,7 +11,13 @@ import {
   type ReactNode,
 } from 'react'
 import { AdInterstitial } from '@/components/ads/AdInterstitial'
-import type { AdPlacement } from '@/services/ads/AdService'
+import {
+  adEmCooldown,
+  marcarAdExibido,
+  type AdAtual,
+  type AdPlacement,
+} from '@/lib/ads'
+import { fetchCurrentAd } from '@/lib/adminApi'
 
 interface AdContextValue {
   showInterstitial: (placement: AdPlacement) => Promise<void>
@@ -18,29 +28,38 @@ const AdContext = createContext<AdContextValue | null>(null)
 interface InterstitialState {
   open: boolean
   placement: AdPlacement
+  ad: AdAtual | null
   resolve: (() => void) | null
 }
 
 const INITIAL: InterstitialState = {
   open: false,
   placement: 'login',
+  ad: null,
   resolve: null,
 }
 
 export function AdGateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InterstitialState>(INITIAL)
 
-  const showInterstitial = useCallback((placement: AdPlacement) => {
-    return new Promise<void>((resolve) => {
+  const showInterstitial = useCallback(async (placement: AdPlacement) => {
+    // Sem vídeo no painel ou ainda no intervalo: o produtor segue sem espera.
+    if (adEmCooldown()) return
+    const ad = await fetchCurrentAd()
+    if (!ad?.url) return
+
+    await new Promise<void>((resolve) => {
       setState({
         open: true,
         placement,
+        ad,
         resolve,
       })
     })
   }, [])
 
   const handleComplete = useCallback(() => {
+    marcarAdExibido()
     setState((current) => {
       current.resolve?.()
       return INITIAL
@@ -52,9 +71,11 @@ export function AdGateProvider({ children }: { children: ReactNode }) {
   return (
     <AdContext.Provider value={value}>
       {children}
-      {state.open ? (
+      {state.open && state.ad ? (
         <AdInterstitial
           placement={state.placement}
+          titulo={state.ad.titulo}
+          videoUrl={state.ad.url}
           onComplete={handleComplete}
         />
       ) : null}

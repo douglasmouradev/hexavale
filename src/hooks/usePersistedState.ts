@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { readStore, writeStore } from '@/storage/localStore'
 
+/** Estado que grava sozinho no localStorage a cada alteração. */
 export function usePersistedState<T>(key: string, initial: T) {
   const [state, setState] = useState<T>(() => readStore<T>(key) ?? initial)
 

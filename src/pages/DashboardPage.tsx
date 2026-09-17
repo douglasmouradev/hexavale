@@ -1,9 +1,11 @@
+/** Home: semana atual, custo do ciclo e atalho para as ferramentas. */
 import { Link } from 'react-router-dom'
 import {
   CalendarDays,
   ChevronRight,
   Droplets,
   Leaf,
+  Shield,
   ShoppingBag,
   Users,
   type LucideIcon,
@@ -13,7 +15,7 @@ import { useApp } from '@/context/AppContext'
 import { APP_MODULES, culturaLabel } from '@/data/modules'
 import { STORAGE_KEYS } from '@/data/constants'
 import { formatCurrency } from '@/lib/format'
-import { gerarSemanasCiclo, semanaHoje, totaisCiclo } from '@/lib/ciclo'
+import { gerarSemanasCiclo, mesclarSemanas, semanaHoje, totaisCiclo } from '@/lib/ciclo'
 import { readStore } from '@/storage/localStore'
 import type { CaldaFormState } from '@/hooks/useCaldaForm'
 import type { CicloCultura } from '@/types/models'
@@ -51,14 +53,14 @@ export function DashboardPage() {
   const calda = readStore<CaldaFormState>(STORAGE_KEYS.calda)
   const cicloSalvo = readStore<CicloCultura>(STORAGE_KEYS.ciclo)
   const temData = Boolean(produtor.dataColheita || produtor.dataReferencia)
-  const semanas =
-    cicloSalvo?.semanas?.length
-      ? cicloSalvo.semanas
-      : gerarSemanasCiclo({
-          dataColheita: produtor.dataColheita,
-          dataInicio: produtor.dataReferencia,
-          cultura: produtor.cultura,
-        })
+  const geradas = gerarSemanasCiclo({
+    dataColheita: produtor.dataColheita,
+    dataInicio: produtor.dataReferencia,
+    cultura: produtor.cultura,
+  })
+  const semanas = geradas.length
+    ? mesclarSemanas(geradas, cicloSalvo?.semanas ?? [])
+    : []
   const atual = semanaHoje(semanas)
   const totais = semanas.length ? totaisCiclo(semanas) : null
   const progresso = atual ? Math.round((atual.numero / 42) * 100) : 0
@@ -166,6 +168,22 @@ export function DashboardPage() {
           })}
         </div>
       </div>
+
+      <Link
+        to="/meus-dados"
+        className="flex items-center gap-3 rounded-3xl bg-paper px-3 py-3 shadow-[0_8px_30px_rgba(23,20,17,0.06)]"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cream text-field">
+          <Shield className="h-5 w-5" strokeWidth={2.2} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold text-field">Meus dados</span>
+          <span className="block text-sm leading-snug text-soil">
+            Privacidade, exportar ou apagar (LGPD)
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-mango" />
+      </Link>
     </div>
   )
 }

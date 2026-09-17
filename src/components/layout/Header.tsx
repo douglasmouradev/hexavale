@@ -1,3 +1,4 @@
+/** Barra superior: título da tela, cultura e Sair (não apaga o caderno). */
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
 import { useApp } from '@/context/AppContext'
@@ -11,6 +12,7 @@ const TITLES: Record<string, string> = {
   '/insumos': 'Insumos',
   '/mao-de-obra': 'Mão de obra',
   '/ciclo': 'Ciclo',
+  '/meus-dados': 'Meus dados',
 }
 
 export function Header() {

@@ -1,3 +1,7 @@
+/**
+ * Receita de calda: volume da área, tanques e quantidade de cada insumo.
+ * ml/L e g/L usam o volume a preparar; unidades por ha usam a área.
+ */
 import { formatNumber, parseDecimal } from '@/lib/format'
 import type { Insumo, UnidadeDose } from '@/types/models'
 

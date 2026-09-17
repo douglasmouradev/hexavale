@@ -1,5 +1,7 @@
+/** Safra de 42 semanas. */
 export const CICLO_SEMANAS = 42
 
+/** Chaves do localStorage. Prefixo antigo hexa-manga: mantido para não perder dados. */
 export const STORAGE_KEYS = {
   propriedade: 'hexa-manga:propriedade',
   produtor: 'hexa-manga:produtor',
@@ -7,4 +9,5 @@ export const STORAGE_KEYS = {
   insumos: 'hexa-manga:insumos',
   maoDeObra: 'hexa-manga:mao-de-obra',
   ciclo: 'hexa-manga:ciclo',
+  consentimento: 'hexa-manga:lgpd-consentimento',
 } as const

@@ -1,5 +1,6 @@
 import type { Cultura } from '@/types/models'
 
+/** Trabalho sugerido por faixa de semana (manga). */
 const MANGA: Record<string, string> = {
   '1-3': 'Poda e limpeza do pomar',
   '4-6': 'Adubação e irrigação pós-poda',
@@ -12,6 +13,7 @@ const MANGA: Record<string, string> = {
   '40-42': 'Colheita',
 }
 
+/** Trabalho sugerido por faixa de semana (uva). */
 const UVA: Record<string, string> = {
   '1-4': 'Poda e amarrio',
   '5-8': 'Brotação e desbrota',
@@ -22,15 +24,32 @@ const UVA: Record<string, string> = {
   '39-42': 'Colheita',
 }
 
-function noIntervalo(numero: number, chave: string) {
-  const [inicio, fim] = chave.split('-').map(Number)
-  return numero >= (inicio ?? 0) && numero <= (fim ?? 0)
+export interface FaseCiclo {
+  titulo: string
+  inicio: number
+  fim: number
 }
 
-export function sugestaoSemana(cultura: Cultura | null, numero: number) {
+/** Agrupa as 42 semanas nas fases da cultura (a tela Ciclo usa isso em vez de 42 cartões). */
+export function fasesDaCultura(cultura: Cultura | null): FaseCiclo[] {
   const mapa = cultura === 'uva' ? UVA : MANGA
-  const encontrada = Object.entries(mapa).find(([faixa]) => noIntervalo(numero, faixa))
-  return encontrada?.[1] ?? 'Tratos culturais'
+  return Object.entries(mapa).map(([faixa, titulo]) => {
+    const [inicio, fim] = faixa.split('-').map(Number)
+    return { titulo, inicio: inicio ?? 1, fim: fim ?? inicio ?? 1 }
+  })
+}
+
+export function faseDaSemana(cultura: Cultura | null, numero: number) {
+  return (
+    fasesDaCultura(cultura).find(
+      (fase) => numero >= fase.inicio && numero <= fase.fim,
+    ) ?? null
+  )
+}
+
+/** Nome do trato sugerido para a semana, segundo a cultura. */
+export function sugestaoSemana(cultura: Cultura | null, numero: number) {
+  return faseDaSemana(cultura, numero)?.titulo ?? 'Tratos culturais'
 }
 
 export const TRABALHOS_CICLO = [

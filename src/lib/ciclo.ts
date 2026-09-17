@@ -1,3 +1,7 @@
+/**
+ * Calendário da safra: 42 semanas a partir do manejo ou de trás da colheita.
+ * Custos lançados ficam nas semanas; as datas mudam sem apagar o que já entrou.
+ */
 import { addDays, formatISO, parseISO, startOfDay } from 'date-fns'
 import { CICLO_SEMANAS } from '@/data/constants'
 import { sugestaoSemana } from '@/data/fenologia'
@@ -13,6 +17,7 @@ export function gerarSemanasCiclo(opts: {
   cultura?: Cultura | null
 }): SemanaCiclo[] {
   if (opts.dataColheita) {
+    // Colheita preenchida: semana 42 cai no dia da colheita.
     const colheita = startOfDay(parseISO(opts.dataColheita))
     const inicio = addDays(colheita, -(CICLO_SEMANAS * 7 - 1))
     return montarSemanas(inicio, opts.cultura)
@@ -42,6 +47,7 @@ function montarSemanas(inicio: Date, cultura?: Cultura | null): SemanaCiclo[] {
   })
 }
 
+/** Mantém lançamentos e trabalho editado quando as datas da safra mudam. */
 export function mesclarSemanas(
   atuais: SemanaCiclo[],
   anteriores: SemanaCiclo[],
@@ -60,8 +66,12 @@ export function mesclarSemanas(
   })
 }
 
+export function hojeIso(): string {
+  return toIsoDate(new Date())
+}
+
 export function semanaHoje(semanas: SemanaCiclo[]): SemanaCiclo | null {
-  const hoje = toIsoDate(new Date())
+  const hoje = hojeIso()
   return (
     semanas.find(
       (semana) => semana.dataInicio <= hoje && semana.dataFim >= hoje,

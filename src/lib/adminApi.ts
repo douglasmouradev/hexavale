@@ -1,3 +1,4 @@
+/** JWT do admin no localStorage. O produtor não usa esta chave. */
 const ADMIN_TOKEN_KEY = 'hexa-manga:admin-token'
 
 export function getAdminToken() {
@@ -34,6 +35,7 @@ export interface AdVideo {
   criado_em?: string
 }
 
+/** Pedido do vídeo atual — sem telefone, nome ou caderno do produtor. */
 export async function fetchCurrentAd() {
   try {
     const response = await fetch('/api/ads/atual')

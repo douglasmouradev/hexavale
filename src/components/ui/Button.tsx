@@ -1,3 +1,4 @@
+/** Botão grande para uso no campo (min 56px). */
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/format'
 

@@ -4,6 +4,8 @@
 @import "@fontsource/source-sans-3/700.css";
 @import "tailwindcss";
 
+/* Paleta HexaVale (Tailwind v4 @theme). */
+
 @theme {
   --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
   --font-display: "Archivo Narrow", "Arial Narrow", sans-serif;

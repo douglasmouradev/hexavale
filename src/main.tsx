@@ -1,3 +1,4 @@
+/** Ponto de entrada: monta o React e marca #root como pronto (o HTML mostra erro se o JS falhar antes). */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
@@ -8,3 +9,4 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+document.getElementById('root')?.setAttribute('data-ready', '1')

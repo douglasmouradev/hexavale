@@ -1,3 +1,4 @@
+/** Formulário da calda persistido neste aparelho (inclui o último resultado). */
 import { useEffect, useState } from 'react'
 import { STORAGE_KEYS } from '@/data/constants'
 import { createId } from '@/lib/id'

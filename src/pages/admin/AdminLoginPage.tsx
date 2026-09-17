@@ -1,5 +1,6 @@
+/** Login do painel (e-mail/senha no MySQL). */
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -68,6 +69,16 @@ export function AdminLoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-soil">
+          E-mail e senha ficam no servidor só para o painel, conforme a LGPD.
+        </p>
+        <Link
+          to="/privacidade"
+          className="mt-3 block text-center text-sm font-semibold text-mango"
+        >
+          Política de Privacidade
+        </Link>
       </div>
     </div>
   )

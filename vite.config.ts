@@ -1,3 +1,4 @@
+/** Dev local: Vite na 5173, API de anúncio/admin na 3001, PWA só no build. */
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -13,19 +14,29 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: true,
-    hmr: {
-      overlay: false,
+    warmup: {
+      clientFiles: [
+        './src/main.tsx',
+        './src/App.tsx',
+        './src/pages/LoginPage.tsx',
+      ],
     },
     proxy: {
       '/api': 'http://127.0.0.1:3001',
       '/uploads': 'http://127.0.0.1:3001',
     },
   },
+  optimizeDeps: {
+    holdUntilCrawlEnd: false,
+    include: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'],
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null,
+      devOptions: { enabled: false },
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brand/*.png', 'icons/*.png'],
       manifest: {
         name: 'Hexavale',

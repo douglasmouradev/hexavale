@@ -1,4 +1,6 @@
+/** Custo de produtos por porte de planta. Depois do cálculo, lança na semana atual. */
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -7,6 +9,7 @@ import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { usePersistedState } from '@/hooks/usePersistedState'
+import { lancarInsumosNoCiclo, mensagemLancamento } from '@/lib/caderno'
 import { formatCurrency, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { exportarInsumosPdf } from '@/lib/pdf'
@@ -25,6 +28,7 @@ interface InsumosState {
   M: string
   G: string
   produtos: ProdutoForm[]
+  resultado: LinhaResultado[] | null
 }
 
 interface LinhaResultado {
@@ -40,6 +44,7 @@ const INITIAL: InsumosState = {
   produtos: [
     { id: createId(), nome: '', valor: '', doseP: '', doseM: '', doseG: '' },
   ],
+  resultado: null,
 }
 
 export function InsumosPage() {
@@ -47,8 +52,8 @@ export function InsumosPage() {
   const { showInterstitial } = useAds()
   const [form, setForm] = usePersistedState(STORAGE_KEYS.insumos, INITIAL)
   const [error, setError] = useState('')
-  const [linhas, setLinhas] = useState<LinhaResultado[] | null>(null)
-  const [calculating, setCalculating] = useState(false)
+  const [aviso, setAviso] = useState('')
+  const linhas = form.resultado ?? null
 
   function emptyProduto(): ProdutoForm {
     return { id: createId(), nome: '', valor: '', doseP: '', doseM: '', doseG: '' }
@@ -61,7 +66,7 @@ export function InsumosPage() {
     const G = parseDecimal(form.G) ?? 0
     if (P + M + G <= 0) {
       setError('Informe a quantidade de plantas.')
-      setLinhas(null)
+      setForm((current) => ({ ...current, resultado: null }))
       return
     }
 
@@ -72,7 +77,7 @@ export function InsumosPage() {
       if (!nome && valor === null) continue
       if (!nome || valor === null || valor < 0) {
         setError('Preencha nome e preço de cada produto lançado.')
-        setLinhas(null)
+        setForm((current) => ({ ...current, resultado: null }))
         return
       }
       const quantidade =
@@ -88,13 +93,15 @@ export function InsumosPage() {
     }
 
     setError('')
-    setCalculating(true)
-    try {
-      await showInterstitial('calculate')
-      setLinhas(calculadas)
-    } finally {
-      setCalculating(false)
-    }
+    setAviso('')
+    setForm((current) => ({ ...current, resultado: calculadas }))
+    void showInterstitial('calculate')
+  }
+
+  function handleLancar() {
+    if (!linhas?.length) return
+    const result = lancarInsumosNoCiclo(produtor, linhas)
+    setAviso(mensagemLancamento(result))
   }
 
   const total = linhas?.reduce((sum, item) => sum + item.custo, 0) ?? 0
@@ -247,6 +254,21 @@ export function InsumosPage() {
             </div>
           ))}
           <p className="text-lg font-bold text-ink">Total {formatCurrency(total)}</p>
+          {aviso ? (
+            <p className="rounded-2xl bg-field/10 px-4 py-3 text-sm font-semibold text-field">
+              {aviso}
+            </p>
+          ) : null}
+          <Button type="button" full onClick={handleLancar}>
+            Lançar na semana atual
+          </Button>
+          {aviso.startsWith('Lançado') ? (
+            <Link to="/ciclo" className="block">
+              <Button type="button" variant="outline" full>
+                Ver no ciclo
+              </Button>
+            </Link>
+          ) : null}
           <Button
             type="button"
             variant="secondary"
@@ -258,8 +280,8 @@ export function InsumosPage() {
         </Card>
       ) : null}
 
-      <Button type="submit" full disabled={calculating}>
-        {calculating ? 'Calculando...' : 'Calcular'}
+      <Button type="submit" full>
+        Calcular
       </Button>
     </form>
   )

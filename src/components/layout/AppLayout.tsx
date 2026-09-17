@@ -1,6 +1,8 @@
+/** Casca do produtor: topo, conteúdo, navegação e o aviso LGPD se faltar aceite. */
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Header } from '@/components/layout/Header'
+import { ConsentGate } from '@/components/lgpd/ConsentGate'
 
 export function AppLayout() {
   return (
@@ -10,6 +12,7 @@ export function AppLayout() {
         <Outlet />
       </main>
       <BottomNav />
+      <ConsentGate />
     </div>
   )
 }

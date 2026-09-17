@@ -17,9 +17,47 @@
       content="Calculadora agrícola para produtores de manga e uva. Funciona offline."
     />
     <title>Hexavale</title>
+    <!-- Fundo no HTML: se o JS atrasar, não fica tela branca. -->
+    <style>
+      html,
+      body,
+      #root {
+        min-height: 100%;
+        margin: 0;
+        background: #ece6da;
+        color: #171411;
+        font-family: "Segoe UI", sans-serif;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">Carregando Hexavale…</div>
+    <script>
+      window.setTimeout(function () {
+        var root = document.getElementById('root')
+        if (!root || root.dataset.ready) return
+        if (root.textContent.indexOf('Carregando') === -1) return
+        root.innerHTML =
+          '<p style="padding:24px;font:600 16px/1.4 Segoe UI,sans-serif">O app demorou para abrir.<br><span style="font-weight:400">Feche esta aba, abra o Chrome em http://127.0.0.1:5173/login e use Ctrl+Shift+R.</span></p>'
+      }, 8000)
+      window.addEventListener('error', function (event) {
+        var root = document.getElementById('root')
+        if (!root || root.dataset.ready) return
+        root.innerHTML =
+          '<p style="padding:24px;font:600 16px/1.4 Segoe UI,sans-serif">Não deu para abrir o app.<br><span style="font-weight:400">' +
+          (event.message || 'Erro no navegador') +
+          '</span></p>'
+      })
+      window.addEventListener('unhandledrejection', function (event) {
+        var root = document.getElementById('root')
+        if (!root || root.dataset.ready) return
+        var reason = event.reason && event.reason.message ? event.reason.message : String(event.reason || '')
+        root.innerHTML =
+          '<p style="padding:24px;font:600 16px/1.4 Segoe UI,sans-serif">Não deu para abrir o app.<br><span style="font-weight:400">' +
+          reason +
+          '</span></p>'
+      })
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+/** Resultado da calda: tanques, quantidades e ranking de consumo. */
 import {
   Bar,
   BarChart,

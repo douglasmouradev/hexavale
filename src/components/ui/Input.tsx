@@ -1,3 +1,4 @@
+/** Campo de formulário com área de toque grande. */
 import type { InputHTMLAttributes, ReactNode } from 'react'
 import { cn } from '@/lib/format'
 

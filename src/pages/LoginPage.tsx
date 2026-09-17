@@ -1,5 +1,6 @@
+/** Login local: telefone + propriedade + checkbox LGPD. Sem senha; fica neste celular. */
 import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -15,6 +16,7 @@ export function LoginPage() {
   const [nome, setNome] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [aceite, setAceite] = useState(false)
 
   if (propriedade && !submitting) {
     return <Navigate to="/" replace />
@@ -34,15 +36,20 @@ export function LoginPage() {
       return
     }
 
+    if (!aceite) {
+      setError('Para entrar, aceite a Política de Privacidade.')
+      return
+    }
+
     setSubmitting(true)
     login({ telefone, nome })
     try {
+      // Anúncio só aparece se houver vídeo e se passou o intervalo; senão entra direto.
       await showInterstitial('login')
-      navigate('/', { replace: true })
     } catch {
-      setSubmitting(false)
-      setError('Não foi possível exibir o anúncio. Tente novamente.')
+      // Segue mesmo se o anúncio não abrir.
     }
+    navigate('/', { replace: true })
   }
 
   return (
@@ -75,18 +82,38 @@ export function LoginPage() {
             onChange={(event) => setNome(event.target.value)}
           />
 
+          <label className="flex items-start gap-3 rounded-2xl bg-cream/80 px-4 py-3">
+            <input
+              type="checkbox"
+              className="mt-1 h-5 w-5 accent-field"
+              checked={aceite}
+              onChange={(event) => setAceite(event.target.checked)}
+            />
+            <span className="text-sm font-semibold text-ink">
+              Li e aceito a Política de Privacidade. Telefone e nome ficam neste celular.
+            </span>
+          </label>
+
           {error ? (
             <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
               {error}
             </p>
           ) : null}
 
-          <Button type="submit" full disabled={submitting}>
+          <Button type="submit" full disabled={submitting || !aceite}>
             {submitting ? 'Abrindo...' : 'Entrar'}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-soil">Sem senha. Fica neste celular.</p>
+        <p className="mt-6 text-center text-sm text-soil">
+          Sem senha. Fica neste celular, conforme a LGPD.
+        </p>
+        <Link
+          to="/privacidade"
+          className="mt-3 block text-center text-sm font-semibold text-mango"
+        >
+          Política de Privacidade
+        </Link>
         <a
           href="/admin/login"
           className="mt-3 block text-center text-sm font-semibold text-mango"

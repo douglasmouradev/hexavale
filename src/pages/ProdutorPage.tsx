@@ -1,3 +1,4 @@
+/** Cultura, área (ha) e datas que montam as 42 semanas. */
 import { useState, type FormEvent } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -19,6 +20,7 @@ export function ProdutorPage() {
   const [cultura, setCultura] = useState<Cultura | null>(produtor.cultura)
   const [dataReferencia, setDataReferencia] = useState(produtor.dataReferencia ?? '')
   const [dataColheita, setDataColheita] = useState(produtor.dataColheita ?? '')
+  const [areaHectares, setAreaHectares] = useState(produtor.areaHectares ?? '')
   const [saved, setSaved] = useState(false)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -27,6 +29,7 @@ export function ProdutorPage() {
       cultura,
       dataReferencia: dataReferencia || null,
       dataColheita: dataColheita || null,
+      areaHectares: areaHectares.trim() || null,
     })
     setSaved(true)
   }
@@ -80,6 +83,18 @@ export function ProdutorPage() {
       </div>
 
       <Card className="space-y-4">
+        <Input
+          label="Área (ha)"
+          name="areaHectares"
+          inputMode="decimal"
+          placeholder="10"
+          value={areaHectares}
+          onChange={(event) => {
+            setAreaHectares(event.target.value)
+            setSaved(false)
+          }}
+          hint="Usada na calda, se o campo de área estiver vazio."
+        />
         <Input
           label="Início do manejo"
           type="date"

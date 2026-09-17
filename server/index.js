@@ -1,3 +1,7 @@
+/**
+ * API HexaVale: login do admin, vídeos de propaganda e healthcheck.
+ * Não recebe caderno, telefone nem nome do produtor.
+ */
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
@@ -74,6 +78,7 @@ function authAdmin(req, res, next) {
   }
 }
 
+/** Cria o banco/tabelas e o primeiro admin se a tabela estiver vazia. */
 async function ensureSchema() {
   const bootstrap = await mysql.createConnection(dbConfig)
   await bootstrap.query(
@@ -158,6 +163,7 @@ app.post('/api/admin/login', async (req, res) => {
   res.json({ token, admin: { id: admin.id, nome: admin.nome, email: admin.email } })
 })
 
+/** Vídeo ativo para o app. Público: não exige JWT e não lê dados do produtor. */
 app.get('/api/ads/atual', async (_req, res) => {
   const [rows] = await pool.query(
     'SELECT id, titulo, arquivo FROM ad_videos WHERE ativo = 1 ORDER BY atualizado_em DESC LIMIT 1',

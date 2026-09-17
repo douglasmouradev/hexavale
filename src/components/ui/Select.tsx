@@ -1,3 +1,4 @@
+/** Select nativo com o mesmo recorte dos inputs. */
 import type { SelectHTMLAttributes } from 'react'
 import { cn } from '@/lib/format'
 

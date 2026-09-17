@@ -1,15 +1,19 @@
+/** Cultura atendida pelo HexaVale no Vale do São Francisco. */
 export type Cultura = 'manga' | 'uva'
 
+/** Identidade local do produtor (não vai para o servidor). */
 export interface Propriedade {
   telefone: string
   nome: string
   loggedAt: string
 }
 
+/** Safra desta propriedade: cultura, datas e área usadas na calda e no ciclo. */
 export interface ConfigProdutor {
   cultura: Cultura | null
   dataReferencia: string | null
   dataColheita: string | null
+  areaHectares: string | null
 }
 
 export type UnidadeDose = 'ml/L' | 'g/L' | 'ml/ha' | 'g/ha' | 'L/ha' | 'kg/ha'
@@ -21,68 +25,23 @@ export interface Insumo {
   unidade: UnidadeDose
 }
 
-export interface CaldaOrganica {
-  id: string
-  tanqueLitros: number
-  areaHectares: number
-  litrosPorHectare: number
-  insumos: Insumo[]
-  atualizadoEm: string
-}
-
-export type PortePlanta = 'P' | 'M' | 'G'
-
-export interface PlantasPorPorte {
-  P: number
-  M: number
-  G: number
-}
-
-export interface Produto {
-  id: string
-  nome: string
-  valorUnitario: number
-  unidade: string
-  dosesPorPorte: Record<PortePlanta, number>
-}
-
-export interface LevantamentoInsumos {
-  id: string
-  plantas: PlantasPorPorte
-  produtos: Produto[]
-  atualizadoEm: string
-}
-
 export type UnidadeTempo = 'dias' | 'horas'
 
-export interface AtividadeMaoDeObra {
-  id: string
-  nome: string
-  trabalhadores: number
-  valorDiaria: number
-  tempoEstimado: number
-  unidadeTempo: UnidadeTempo
-}
-
-export interface LevantamentoMaoDeObra {
-  id: string
-  atividades: AtividadeMaoDeObra[]
-  atualizadoEm: string
-}
-
 export interface InsumoSemana {
-  produtoId?: string
   nome: string
   quantidade: number
   custo: number
+  /** 'insumos' veio da tela Insumos; 'manual' foi digitado no Ciclo. */
+  origem?: 'insumos' | 'manual'
 }
 
 export interface MaoDeObraSemana {
-  atividadeId?: string
   descricao: string
   pessoas: number
   diaria: number
   dias: number
+  /** 'mao-de-obra' veio da tela Diária; 'manual' foi digitado no Ciclo. */
+  origem?: 'mao-de-obra' | 'manual'
 }
 
 export interface MecanizacaoSemana {
@@ -121,4 +80,5 @@ export const PRODUTOR_PADRAO: ConfigProdutor = {
   cultura: null,
   dataReferencia: null,
   dataColheita: null,
+  areaHectares: null,
 }

@@ -1,12 +1,10 @@
-/** Barra baixa de ferramenta: só no celular e no tablet. */
+/** Barra baixa: início e as quatro calculadoras. */
 import { NavLink } from 'react-router-dom'
 import { bottomNavItems } from '@/components/layout/navItems'
-import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/format'
 
 export function BottomNav() {
-  const { produtor } = useApp()
-  const itens = bottomNavItems(produtor.cultura)
+  const itens = bottomNavItems()
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] desk:hidden">

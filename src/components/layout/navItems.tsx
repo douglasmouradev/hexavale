@@ -1,6 +1,5 @@
-/** Navegação compartilhada: barra baixa no celular, coluna à esquerda no desktop. */
+/** Navegação: início e as quatro calculadoras. */
 import type { ReactNode } from 'react'
-import type { Cultura } from '@/types/models'
 
 export interface NavItem {
   to: string
@@ -16,48 +15,41 @@ const iconeCasa = (
   </svg>
 )
 
+const iconeSafra = (
+  <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.8">
+    <rect x="4" y="5" width="16" height="15" rx="1" />
+    <path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6" />
+  </svg>
+)
+
+const iconePbz = (
+  <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M12 21c-4 0-7-3.2-7-8 0-4 4-9 7-11 3 2 7 7 7 11 0 4.8-3 8-7 8Zm-2-8 2 2 4-5" />
+  </svg>
+)
+
 const iconeCalda = (
   <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M12 3s6 6.2 6 10a6 6 0 1 1-12 0c0-3.8 6-10 6-10z" />
   </svg>
 )
 
-const iconeAgenda = (
+const iconeTratos = (
   <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.8">
     <rect x="4" y="5" width="16" height="15" rx="1" />
     <path d="M8 3v4M16 3v4M4 10h16" />
   </svg>
 )
 
-const iconeInsumos = (
-  <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M4 8h16l-1.2 11.2A2 2 0 0 1 16.81 21H7.19a2 2 0 0 1-1.99-1.8L4 8zM8 8V6a4 4 0 0 1 8 0v2" />
-  </svg>
-)
-
-const iconeDiaria = (
-  <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.8">
-    <circle cx="9" cy="8" r="3" />
-    <circle cx="16" cy="9" r="2.5" />
-    <path d="M3.5 19c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M13 14.2c1.8.3 3.4 1.6 4.2 3.8" />
-  </svg>
-)
-
-/** Na manga o ícone de agenda abre o calendário da mangueira, não o caderno vazio. */
-export function bottomNavItems(cultura: Cultura | null): NavItem[] {
-  const meio: NavItem =
-    cultura === 'uva'
-      ? { to: '/ciclo', label: 'Ciclo', icon: iconeAgenda }
-      : { to: '/safra', label: 'Safra', icon: iconeAgenda }
-
+export function bottomNavItems(): NavItem[] {
   return [
     { to: '/', label: 'Início', icon: iconeCasa },
-    { to: '/calda', label: 'Calda', icon: iconeCalda },
-    meio,
-    { to: '/insumos', label: 'Insumos', icon: iconeInsumos },
-    { to: '/mao-de-obra', label: 'Diária', icon: iconeDiaria },
+    { to: '/safra', label: 'Safra', icon: iconeSafra },
+    { to: '/regulador', label: 'PBZ', icon: iconePbz },
+    { to: '/custo-calda', label: 'Calda', icon: iconeCalda },
+    { to: '/calendario', label: 'Tratos', icon: iconeTratos },
   ]
 }
 
-export const BOTTOM_NAV_ITEMS = bottomNavItems(null)
+export const BOTTOM_NAV_ITEMS = bottomNavItems()
 export const BOTTOM_NAV_PATHS = BOTTOM_NAV_ITEMS.map((item) => item.to)

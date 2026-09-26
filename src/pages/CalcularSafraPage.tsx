@@ -161,21 +161,6 @@ export function CalcularSafraPage() {
     }
   }
 
-  if (produtor.cultura === 'uva') {
-    return (
-      <Card className="space-y-3">
-        <p className="font-bold text-ink">Ferramenta da mangueira</p>
-        <p className="text-sm text-soil">
-          O cálculo da safra segue poda, desenvolvimento vegetativo, indução floral e floração da
-          manga. Na uva, use o Ciclo de 42 semanas.
-        </p>
-        <Link to="/ciclo" className="block">
-          <Button full>Abrir ciclo</Button>
-        </Link>
-      </Card>
-    )
-  }
-
   if (!variedade) return null
 
   return (

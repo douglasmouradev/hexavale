@@ -39,7 +39,7 @@
         if (root.textContent.indexOf('Carregando') === -1) return
         root.innerHTML =
           '<p style="padding:24px;font:600 16px/1.4 Segoe UI,sans-serif">O app demorou para abrir.<br><span style="font-weight:400">Feche esta aba e abra de novo. Se continuar, recarregue com Ctrl+Shift+R.</span></p>'
-      }, 8000)
+      }, 20000)
       window.addEventListener('error', function (event) {
         var root = document.getElementById('root')
         if (!root || root.dataset.ready) return

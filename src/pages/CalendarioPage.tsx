@@ -227,20 +227,6 @@ export function CalendarioPage() {
     })
   }
 
-  if (produtor.cultura === 'uva') {
-    return (
-      <Card className="space-y-3">
-        <p className="font-bold text-ink">Ferramenta da mangueira</p>
-        <p className="text-sm text-soil">
-          O planejamento de tratos é da manga. Na uva, use o Ciclo de 42 semanas.
-        </p>
-        <Link to="/ciclo" className="block">
-          <Button full>Abrir ciclo</Button>
-        </Link>
-      </Card>
-    )
-  }
-
   if (!variedade) return null
 
   const ultimaEtapa = variedade.stages[variedade.stages.length - 1]
@@ -329,13 +315,9 @@ export function CalendarioPage() {
                 </div>
                 {podeUsarProdutor ? (
                   <Button type="button" variant="outline" full onClick={handleUsarProdutorNoDraft}>
-                    Usar cadastro do Produtor
+                    Usar área e plantas do cadastro
                   </Button>
-                ) : (
-                  <Link to="/produtor" className="block text-sm font-semibold text-field">
-                    Abrir Produtor para informar talhão e área
-                  </Link>
-                )}
+                ) : null}
                 <p className="text-xs font-semibold text-ink">Etapas do ciclo</p>
                 <p className="text-xs text-soil">
                   A primeira não tem intervalo. As demais levam os dias desde a etapa anterior.
@@ -719,9 +701,6 @@ export function CalendarioPage() {
         </Button>
         <Link to="/safra" className="block text-center text-sm font-semibold text-field">
           Calcular as datas da safra
-        </Link>
-        <Link to="/ciclo" className="block text-center text-sm font-semibold text-field">
-          Abrir o caderno de 42 semanas
         </Link>
       </div>
     </div>

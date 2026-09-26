@@ -1,6 +1,5 @@
 /** Regulador de crescimento: dose em mL/planta por porte, volume em L e custo. */
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
 import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
@@ -148,20 +147,6 @@ export function ReguladorPage() {
   }
 
   const resultado = form.resultado
-
-  if (produtor.cultura === 'uva') {
-    return (
-      <Card className="space-y-3">
-        <p className="font-bold text-ink">Ferramenta da mangueira</p>
-        <p className="text-sm text-soil">
-          O regulador em mL por planta é o da manga. Na uva, use Insumos por porte.
-        </p>
-        <Link to="/insumos" className="block">
-          <Button full>Abrir insumos</Button>
-        </Link>
-      </Card>
-    )
-  }
 
   return (
     <form className="space-y-5" onSubmit={handleCalculate}>

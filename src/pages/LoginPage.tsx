@@ -66,7 +66,7 @@ export function LoginPage() {
           neste celular
         </>
       }
-      subtitle="Calda, insumos e ciclo. Os dados ficam só neste aparelho."
+      subtitle="Safra, PBZ, calda orgânica e tratos. Os dados ficam só neste aparelho."
       footer={
         <p className="text-center text-[13px] font-semibold tracking-[0.04em] text-soil/70">
           <Link to="/admin/login" className="text-field">

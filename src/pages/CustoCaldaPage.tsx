@@ -1,6 +1,5 @@
 /** Custo da calda em kg e R$: tanque, litro e hectare, em 3 etapas. */
 import { useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
 import { StickyAction, scrollAoResultado } from '@/components/layout/StickyAction'
@@ -282,16 +281,12 @@ export function CustoCaldaPage() {
             </Button>
             {podeCopiarTanque ? (
               <Button type="button" variant="outline" full onClick={copiarTanqueDaCalda}>
-                Usar tanque da Calda
+                Usar tanque já informado
                 {tanqueCalda ? ` (${tanqueCalda} L` : ''}
                 {lhaCalda ? `${tanqueCalda ? ', ' : ' ('}${lhaCalda} L/ha` : ''}
                 {tanqueCalda || lhaCalda ? ')' : ''}
               </Button>
-            ) : (
-              <Link to="/calda" className="block text-sm font-semibold text-field">
-                Abrir a Calda para informar o tanque
-              </Link>
-            )}
+            ) : null}
             <Input
               label="Volume do tanque (L)"
               name="tankVolume"

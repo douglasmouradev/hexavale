@@ -95,11 +95,9 @@ export function MeusDadosPage() {
         <Row label="Talhões" value={produtor.talhoes ?? '—'} />
         <Row label="Área (ha)" value={produtor.areaHectares ?? '—'} />
         <p className="mt-3 text-sm text-soil">
-          Calda, insumos, diária e ciclo também ficam aqui. Política: versão {POLITICA_VERSAO}.
+          Safra, PBZ, calda orgânica e tratos também ficam neste aparelho. Política: versão{' '}
+          {POLITICA_VERSAO}.
         </p>
-        <Link to="/produtor" className="mt-2 inline-block text-sm text-field">
-          Corrigir em Produtor
-        </Link>
       </Card>
       </div>
 

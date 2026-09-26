@@ -1,7 +1,6 @@
 /**
- * HexaVale — PWA de campo para manga e uva.
- * Rotas públicas (login, política) vs. área do produtor e painel admin.
- * Páginas entram com lazy para o login não carregar o caderno inteiro.
+ * HexaVale — PWA de campo para a mangueira.
+ * Quatro calculadoras: safra, PBZ, calda orgânica e tratos culturais.
  */
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
@@ -36,39 +35,9 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 )
-const ProdutorPage = lazy(() =>
-  import('@/pages/ProdutorPage').then((module) => ({
-    default: module.ProdutorPage,
-  })),
-)
-const CaldaOrganicaPage = lazy(() =>
-  import('@/pages/CaldaOrganicaPage').then((module) => ({
-    default: module.CaldaOrganicaPage,
-  })),
-)
-const InsumosPage = lazy(() =>
-  import('@/pages/InsumosPage').then((module) => ({
-    default: module.InsumosPage,
-  })),
-)
-const MaoDeObraPage = lazy(() =>
-  import('@/pages/MaoDeObraPage').then((module) => ({
-    default: module.MaoDeObraPage,
-  })),
-)
-const CicloCulturaPage = lazy(() =>
-  import('@/pages/CicloCulturaPage').then((module) => ({
-    default: module.CicloCulturaPage,
-  })),
-)
 const MeusDadosPage = lazy(() =>
   import('@/pages/MeusDadosPage').then((module) => ({
     default: module.MeusDadosPage,
-  })),
-)
-const CatalogoPage = lazy(() =>
-  import('@/pages/CatalogoPage').then((module) => ({
-    default: module.CatalogoPage,
   })),
 )
 const CustoCaldaPage = lazy(() =>
@@ -119,17 +88,17 @@ export default function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<DashboardPage />} />
-                  <Route path="/produtor" element={<ProdutorPage />} />
-                  <Route path="/calda" element={<CaldaOrganicaPage />} />
-                  <Route path="/custo-calda" element={<CustoCaldaPage />} />
-                  <Route path="/regulador" element={<ReguladorPage />} />
                   <Route path="/safra" element={<CalcularSafraPage />} />
+                  <Route path="/regulador" element={<ReguladorPage />} />
+                  <Route path="/custo-calda" element={<CustoCaldaPage />} />
                   <Route path="/calendario" element={<CalendarioPage />} />
-                  <Route path="/insumos" element={<InsumosPage />} />
-                  <Route path="/mao-de-obra" element={<MaoDeObraPage />} />
-                  <Route path="/ciclo" element={<CicloCulturaPage />} />
                   <Route path="/meus-dados" element={<MeusDadosPage />} />
-                  <Route path="/catalogo" element={<CatalogoPage />} />
+                  <Route path="/calda" element={<Navigate to="/custo-calda" replace />} />
+                  <Route path="/produtor" element={<Navigate to="/" replace />} />
+                  <Route path="/insumos" element={<Navigate to="/regulador" replace />} />
+                  <Route path="/mao-de-obra" element={<Navigate to="/calendario" replace />} />
+                  <Route path="/ciclo" element={<Navigate to="/safra" replace />} />
+                  <Route path="/catalogo" element={<Navigate to="/" replace />} />
                 </Route>
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

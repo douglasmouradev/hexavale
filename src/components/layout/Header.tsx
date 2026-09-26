@@ -1,21 +1,14 @@
 /** Topo sólido. Logo ou título à esquerda, avatar à direita — o furo da câmera fica no meio. */
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Wordmark } from '@/components/brand/Logo'
-import { ChipCultura } from '@/components/ui/Chip'
 import { useApp } from '@/context/AppContext'
 
 const TITLES: Record<string, string> = {
   '/': 'Início',
-  '/produtor': 'Produtor',
-  '/calda': 'Calda',
-  '/custo-calda': 'Custo da calda orgânica',
-  '/regulador': 'Regulador de crescimento',
-  '/safra': 'Calcular safra',
-  '/calendario': 'Planejar tratos',
-  '/insumos': 'Insumos',
-  '/mao-de-obra': 'Mão de obra',
-  '/ciclo': 'Ciclo',
-  '/catalogo': 'Catálogo',
+  '/safra': 'Calcular Safra',
+  '/regulador': 'Calcular PBZ',
+  '/custo-calda': 'Calcular Calda Orgânica',
+  '/calendario': 'Planejar Tratos Culturais',
   '/meus-dados': 'Meus dados',
 }
 
@@ -44,7 +37,7 @@ export function Header() {
               <p className="font-display text-2xl font-semibold leading-tight text-field">
                 {propriedade?.nome}
               </p>
-              <p className="text-sm text-soil">Caderno desta safra</p>
+              <p className="text-sm text-soil">Calculadoras da mangueira</p>
             </div>
           </>
         ) : (
@@ -69,7 +62,6 @@ export function Header() {
         )}
 
         <div className="flex shrink-0 items-center gap-2">
-          {produtor.cultura ? <ChipCultura cultura={produtor.cultura} /> : null}
           <Link
             to="/meus-dados"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-mango text-sm font-bold text-white"

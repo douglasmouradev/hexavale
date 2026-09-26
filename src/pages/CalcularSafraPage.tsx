@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card'
 import { DateField } from '@/components/ui/DateField'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { usePersistedState } from '@/hooks/usePersistedState'
@@ -67,6 +68,7 @@ function variedadeVazia(): VariedadeSafra {
 
 export function CalcularSafraPage() {
   const { produtor, salvarProdutor } = useApp()
+  const { showInterstitial } = useAds()
   const [form, setForm] = usePersistedState(STORAGE_KEYS.calcularSafra, INITIAL)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<VariedadeSafra | null>(null)
@@ -308,7 +310,14 @@ export function CalcularSafraPage() {
             value={form.dataColheita}
             onChange={gravarColheita}
           />
-          <Button type="button" variant="secondary" onClick={() => scrollAoResultado(resultRef.current)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              scrollAoResultado(resultRef.current)
+              if (form.dataColheita) void showInterstitial('calculate')
+            }}
+          >
             Calcular
           </Button>
         </div>

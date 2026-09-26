@@ -30,7 +30,7 @@ describe('modoOperacao', () => {
   it('marca pulverização mecanizada pelo nome e poda como manual', () => {
     const talhao = talhaoPadrao()
     expect(modoOperacao(operacaoVazia('Pulv. meca. (turbo atomizador)', talhao))).toBe('mecanizado')
-    expect(modoOperacao(operacaoVazia('Poda pós-colheita', talhao))).toBe('manual')
+    expect(modoOperacao(operacaoVazia('Poda', talhao))).toBe('manual')
   })
 })
 
@@ -84,7 +84,7 @@ describe('custosDoCiclo', () => {
     const custos = custosDoCiclo(palmerPadrao())
     expect(custos.total).toBe(5000)
     expect(custos.porPlanta).toBe(2.5)
-    expect(custos.entries[0]?.nome).toBe('Poda pós-colheita')
+    expect(custos.entries[0]?.nome).toBe('Poda')
     expect(custos.entries[0]?.pct).toBe(100)
   })
 })

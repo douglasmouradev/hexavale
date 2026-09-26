@@ -13,7 +13,9 @@
     "start": "node server/index.js --app",
     "lint": "oxlint",
     "preview": "vite preview",
-    "preview:all": "concurrently -n web,api -c green,blue \"npm run preview\" \"npm run server\""
+    "preview:all": "concurrently -n web,api -c green,blue \"npm run preview -- --host 127.0.0.1 --port 4173\" \"npm run server\"",
+    "demo": "npm run build && npm run preview:all",
+    "tunnel": "cloudflared tunnel --url http://127.0.0.1:4173"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

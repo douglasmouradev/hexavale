@@ -126,7 +126,12 @@ export function AdminVideosPage() {
 
       <div className="mt-5 space-y-3 lg:mt-0">
         {videos.length === 0 ? (
-          <p className="text-sm text-soil">Nenhum vídeo ainda. O app mostra a tela de espera até você enviar o primeiro.</p>
+          <Card className="space-y-2">
+            <p className="font-medium text-ink">Nenhum vídeo no ar</p>
+            <p className="text-sm text-soil">
+              Envie um MP4 acima. Sem vídeo ativo, o produtor entra no app sem anúncio após o login.
+            </p>
+          </Card>
         ) : null}
         {videos.map((video) => (
           <Card key={video.id} className="space-y-3">

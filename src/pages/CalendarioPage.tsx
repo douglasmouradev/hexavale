@@ -13,6 +13,7 @@ import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Input } from '@/components/ui/Input'
 import { Metric } from '@/components/ui/Metric'
 import { Select } from '@/components/ui/Select'
+import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { usePersistedState } from '@/hooks/usePersistedState'
@@ -59,7 +60,7 @@ function estadoInicial(): CalendarioState {
 const INITIAL = estadoInicial()
 
 const SUGESTOES_OP = [
-  'Poda pós-colheita',
+  'Poda',
   'Roçagem mecanizada',
   'Cont. de ervas daninhas – herbicida',
   'Pulv. meca. (turbo atomizador)',
@@ -76,6 +77,7 @@ const SUGESTOES_OP = [
 
 export function CalendarioPage() {
   const { propriedade, produtor, salvarProdutor } = useApp()
+  const { showInterstitial } = useAds()
   const [form, setForm] = usePersistedState(STORAGE_KEYS.calendario, INITIAL)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null)
@@ -146,6 +148,7 @@ export function CalendarioPage() {
 
   function handleCalcular() {
     scrollAoResultado(resultRef.current)
+    if (form.dataAlvo) void showInterstitial('calculate')
   }
 
   function abrirEdicao(item: VariedadeManga) {

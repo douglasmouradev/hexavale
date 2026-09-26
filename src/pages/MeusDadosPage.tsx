@@ -1,9 +1,10 @@
-/** Direitos do titular: ver, exportar, restaurar cópia e apagar neste aparelho. */
-import { useRef, useState, type ChangeEvent } from 'react'
+/** Direitos do titular: ver, corrigir talhão, exportar, restaurar e apagar. */
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
 import { PageTitle } from '@/components/ui/PageTitle'
 import { Row } from '@/components/ui/Row'
 import { useApp } from '@/context/AppContext'
@@ -17,7 +18,8 @@ function formatQuando(iso: string | undefined) {
 }
 
 export function MeusDadosPage() {
-  const { propriedade, produtor, consentimento, apagarMeusDados, restaurarBackup, logout } = useApp()
+  const { propriedade, produtor, consentimento, salvarProdutor, apagarMeusDados, restaurarBackup, logout } =
+    useApp()
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmar, setConfirmar] = useState(false)
@@ -25,6 +27,13 @@ export function MeusDadosPage() {
   const [erro, setErro] = useState('')
   const [restaurando, setRestaurando] = useState(false)
   const [pendente, setPendente] = useState<PacoteTitular | null>(null)
+  const [talhao, setTalhao] = useState({
+    nomeResponsavel: produtor.nomeResponsavel ?? '',
+    municipio: produtor.municipio ?? '',
+    talhoes: produtor.talhoes ?? '',
+    areaHectares: produtor.areaHectares ?? '',
+  })
+  const [salvoTalhao, setSalvoTalhao] = useState(false)
 
   function handleApagar() {
     if (!confirmar) {
@@ -33,6 +42,20 @@ export function MeusDadosPage() {
     }
     apagarMeusDados()
     navigate('/login', { replace: true })
+  }
+
+  function handleSalvarTalhao(event: FormEvent) {
+    event.preventDefault()
+    salvarProdutor({
+      ...produtor,
+      cultura: produtor.cultura ?? 'manga',
+      nomeResponsavel: talhao.nomeResponsavel.trim() || null,
+      municipio: talhao.municipio.trim() || null,
+      talhoes: talhao.talhoes.trim() || null,
+      areaHectares: talhao.areaHectares.trim() || null,
+    })
+    setSalvoTalhao(true)
+    window.setTimeout(() => setSalvoTalhao(false), 2500)
   }
 
   async function handleRestaurar(event: ChangeEvent<HTMLInputElement>) {
@@ -69,36 +92,66 @@ export function MeusDadosPage() {
       />
 
       <div className="grid gap-5 lg:grid-cols-2">
-      <Card>
-        <h3 className="mb-1 font-medium text-ink">Neste aparelho</h3>
-        <Row label="Propriedade" value={propriedade?.nome ?? '—'} />
-        <Row
-          label="Telefone"
-          value={propriedade?.telefone ? formatPhone(propriedade.telefone) : '—'}
-        />
-        <Row label="Entrada" value={formatQuando(propriedade?.loggedAt)} />
-        <Row
-          label="Aceite"
-          value={
-            consentimento
-              ? `v${consentimento.versao} · ${formatQuando(consentimento.aceitoEm)}`
-              : 'Pendente'
-          }
-        />
-      </Card>
+        <Card>
+          <h3 className="mb-1 font-medium text-ink">Neste aparelho</h3>
+          <Row label="Propriedade" value={propriedade?.nome ?? '—'} />
+          <Row
+            label="Telefone"
+            value={propriedade?.telefone ? formatPhone(propriedade.telefone) : '—'}
+          />
+          <Row label="Entrada" value={formatQuando(propriedade?.loggedAt)} />
+          <Row
+            label="Aceite"
+            value={
+              consentimento
+                ? `v${consentimento.versao} · ${formatQuando(consentimento.aceitoEm)}`
+                : 'Pendente'
+            }
+          />
+        </Card>
 
-      <Card>
-        <h3 className="mb-1 font-medium text-ink">Caderno</h3>
-        <Row label="Cultura" value={produtor.cultura ?? '—'} />
-        <Row label="Responsável" value={produtor.nomeResponsavel ?? '—'} />
-        <Row label="Município" value={produtor.municipio ?? '—'} />
-        <Row label="Talhões" value={produtor.talhoes ?? '—'} />
-        <Row label="Área (ha)" value={produtor.areaHectares ?? '—'} />
-        <p className="mt-3 text-sm text-soil">
-          Safra, PBZ, calda orgânica e tratos também ficam neste aparelho. Política: versão{' '}
-          {POLITICA_VERSAO}.
-        </p>
-      </Card>
+        <Card>
+          <form className="space-y-3" onSubmit={handleSalvarTalhao}>
+            <h3 className="font-medium text-ink">Talhão e responsável</h3>
+            <p className="text-sm text-soil">
+              Usado no PBZ e nos tratos. Fica só neste aparelho.
+            </p>
+            <Input
+              label="Responsável"
+              name="nomeResponsavel"
+              value={talhao.nomeResponsavel}
+              onChange={(event) => setTalhao({ ...talhao, nomeResponsavel: event.target.value })}
+            />
+            <Input
+              label="Município"
+              name="municipio"
+              value={talhao.municipio}
+              onChange={(event) => setTalhao({ ...talhao, municipio: event.target.value })}
+            />
+            <Input
+              label="Talhões"
+              name="talhoes"
+              placeholder="Ex: Parcela 10"
+              value={talhao.talhoes}
+              onChange={(event) => setTalhao({ ...talhao, talhoes: event.target.value })}
+            />
+            <Input
+              label="Área (ha)"
+              name="areaHectares"
+              inputMode="decimal"
+              placeholder="2"
+              value={talhao.areaHectares}
+              onChange={(event) => setTalhao({ ...talhao, areaHectares: event.target.value })}
+            />
+            {salvoTalhao ? <Banner tone="ok">Talhão salvo neste aparelho.</Banner> : null}
+            <Button type="submit" full variant="secondary">
+              Salvar talhão
+            </Button>
+            <p className="text-sm text-soil">
+              Safra, PBZ, calda e tratos também ficam aqui. Política: versão {POLITICA_VERSAO}.
+            </p>
+          </form>
+        </Card>
       </div>
 
       <Card className="space-y-3">

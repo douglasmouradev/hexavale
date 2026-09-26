@@ -131,7 +131,7 @@ export function palmerPadrao(): VariedadeManga {
   const poda = seedWeeks(
     60,
     {
-      0: ['Poda pós-colheita'],
+      0: ['Poda'],
       7: ['Roçagem mecanizada'],
       14: ['Cont. de ervas daninhas – herbicida'],
       21: ['Pulv. meca. (turbo atomizador)'],
@@ -147,8 +147,8 @@ export function palmerPadrao(): VariedadeManga {
     name: 'Palmer',
     talhao,
     stages: [
-      { id: createId(), name: 'Poda pós-colheita' },
-      { id: createId(), name: 'Regulador de crescimento', days: 60, weeks: poda },
+      { id: createId(), name: 'Poda' },
+      { id: createId(), name: 'Desenvolvimento vegetativo', days: 60, weeks: poda },
       {
         id: createId(),
         name: 'Indução floral',
@@ -172,7 +172,7 @@ export function palmerPadrao(): VariedadeManga {
       },
       {
         id: createId(),
-        name: 'Florescimento',
+        name: 'Floração',
         days: 30,
         weeks: seedWeeks(
           30,
@@ -475,10 +475,10 @@ export function variedadeSimples(name: string, p1: number, p2: number, p3: numbe
     name,
     talhao,
     stages: [
-      { id: createId(), name: 'Poda pós-colheita' },
-      { id: createId(), name: 'Regulador de crescimento', days: p1, weeks: seedWeeks(p1, {}, talhao) },
+      { id: createId(), name: 'Poda' },
+      { id: createId(), name: 'Desenvolvimento vegetativo', days: p1, weeks: seedWeeks(p1, {}, talhao) },
       { id: createId(), name: 'Indução floral', days: p2, weeks: seedWeeks(p2, {}, talhao) },
-      { id: createId(), name: 'Florescimento', days: p3, weeks: seedWeeks(p3, {}, talhao) },
+      { id: createId(), name: 'Floração', days: p3, weeks: seedWeeks(p3, {}, talhao) },
       { id: createId(), name: 'Colheita', days: p4, weeks: seedWeeks(p4, {}, talhao) },
     ],
   }

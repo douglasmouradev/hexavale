@@ -181,21 +181,32 @@ async function ensureSchema() {
       [nome, email, senha_hash],
     )
     console.log(`Administrador inicial: ${email}`)
-    return
+  } else {
+    const atual = admins[0]
+    const mesmaSenha = await bcrypt.compare(senha, atual.senha_hash)
+    const senhaAntigaExemplo = await bcrypt.compare('HexaAdmin123', atual.senha_hash)
+    if (serveApp && (!mesmaSenha || atual.email !== email || senhaAntigaExemplo)) {
+      const senha_hash = await bcrypt.hash(senha, 10)
+      await pool.query('UPDATE admins SET senha_hash = ?, email = ?, nome = ? WHERE id = ?', [
+        senha_hash,
+        email,
+        nome,
+        atual.id,
+      ])
+      console.log('Administrador atualizado a partir do .env.')
+    }
   }
 
-  const atual = admins[0]
-  const mesmaSenha = await bcrypt.compare(senha, atual.senha_hash)
-  const senhaAntigaExemplo = await bcrypt.compare('HexaAdmin123', atual.senha_hash)
-  if (serveApp && (!mesmaSenha || atual.email !== email || senhaAntigaExemplo)) {
-    const senha_hash = await bcrypt.hash(senha, 10)
-    await pool.query('UPDATE admins SET senha_hash = ?, email = ?, nome = ? WHERE id = ?', [
-      senha_hash,
-      email,
-      nome,
-      atual.id,
-    ])
-    console.log('Administrador atualizado a partir do .env.')
+  const amostra = 'hexavale-amostra.mp4'
+  const amostraPath = path.join(uploadsDir, amostra)
+  const [videos] = await pool.query('SELECT id FROM ad_videos LIMIT 1')
+  if (videos.length === 0 && fs.existsSync(amostraPath)) {
+    const tamanho = fs.statSync(amostraPath).size
+    await pool.query(
+      'INSERT INTO ad_videos (titulo, arquivo, mime, tamanho_bytes, ativo) VALUES (?, ?, ?, ?, 1)',
+      ['Amostra Hexavale', amostra, 'video/mp4', tamanho],
+    )
+    console.log('Vídeo de amostra colocado no ar.')
   }
 
   const [noAr] = await pool.query('SELECT id FROM ad_videos WHERE ativo = 1 LIMIT 1')

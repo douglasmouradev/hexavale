@@ -1,6 +1,6 @@
 /**
- * Anúncio em tela cheia. Não trava o cálculo: se não houver vídeo ou
- * se o último anúncio foi há menos de 15 min, a Promise resolve na hora.
+ * Anúncio em tela cheia. No cálculo respeita 15 min; no login entra sempre.
+ * Pedidos simultâneos (login + home) compartilham o mesmo filme.
  */
 import {
   createContext,
@@ -42,29 +42,33 @@ const INITIAL: InterstitialState = {
 
 export function AdGateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InterstitialState>(INITIAL)
-  const emCurso = useRef(false)
+  const pendente = useRef<Promise<boolean> | null>(null)
 
   const showInterstitial = useCallback(async (placement: AdPlacement) => {
-    // No pomar o cálculo não para a cada toque; no login o anúncio entra sempre.
     if (placement !== 'login' && adEmCooldown()) return false
-    if (emCurso.current) return false
-    emCurso.current = true
-    try {
-      const ad = await fetchCurrentAd()
-      if (!ad?.url) return false
+    if (pendente.current) return pendente.current
 
-      await new Promise<void>((resolve) => {
-        setState({
-          open: true,
-          placement,
-          ad,
-          resolve,
+    const run = (async () => {
+      try {
+        const ad = await fetchCurrentAd()
+        if (!ad?.url) return false
+
+        await new Promise<void>((resolve) => {
+          setState({
+            open: true,
+            placement,
+            ad,
+            resolve,
+          })
         })
-      })
-      return true
-    } finally {
-      emCurso.current = false
-    }
+        return true
+      } finally {
+        pendente.current = null
+      }
+    })()
+
+    pendente.current = run
+    return run
   }, [])
 
   const handleComplete = useCallback(() => {

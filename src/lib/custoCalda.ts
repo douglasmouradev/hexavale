@@ -16,6 +16,7 @@ export interface ResultadoCustoCalda {
   totalQtd: number
   valorLitro: number
   volumeCiclo: number
+  valorHaAplicacao: number
   valorOperacaoHa: number
   tankVolume: number
   volPerHa: number
@@ -35,6 +36,7 @@ export function calcularCustoCalda(input: {
   const totalQtd = validos.reduce((sum, item) => sum + item.qtd, 0)
   const valorLitro = input.tankVolume > 0 ? totalValor / input.tankVolume : 0
   const volumeCiclo = input.volPerHa * input.numApps
+  const valorHaAplicacao = valorLitro * input.volPerHa
   const valorOperacaoHa = valorLitro * volumeCiclo
 
   let maiorCusto: ResultadoCustoCalda['maiorCusto'] = null
@@ -58,6 +60,7 @@ export function calcularCustoCalda(input: {
     totalQtd,
     valorLitro,
     volumeCiclo,
+    valorHaAplicacao,
     valorOperacaoHa,
     tankVolume: input.tankVolume,
     volPerHa: input.volPerHa,

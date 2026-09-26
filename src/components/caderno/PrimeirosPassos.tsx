@@ -1,5 +1,6 @@
-/** Primeira safra: cultura, área e data, sem abrir a tela inteira de Produtor. */
+/** Primeira safra: cultura e data da colheita, sem abrir a tela inteira de Produtor. */
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { DateField } from '@/components/ui/DateField'
@@ -10,20 +11,26 @@ import type { Cultura } from '@/types/models'
 
 export function PrimeirosPassos() {
   const { produtor, salvarProdutor } = useApp()
+  const navigate = useNavigate()
   const [cultura, setCultura] = useState<Cultura | null>(produtor.cultura)
   const [areaHectares, setAreaHectares] = useState(produtor.areaHectares ?? '')
   const [dataColheita, setDataColheita] = useState(produtor.dataColheita ?? '')
   const [dataReferencia, setDataReferencia] = useState(produtor.dataReferencia ?? '')
 
+  const manga = cultura !== 'uva'
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!cultura) return
     salvarProdutor({
+      ...produtor,
       cultura,
       areaHectares: areaHectares.trim() || null,
       dataColheita: dataColheita || null,
       dataReferencia: dataReferencia || null,
     })
+    if (manga && dataColheita) navigate('/safra')
+    else navigate('/ciclo')
   }
 
   return (
@@ -31,7 +38,9 @@ export function PrimeirosPassos() {
       <div>
         <p className="font-display text-xl font-semibold text-field">Comece a safra</p>
         <p className="mt-1 text-sm text-soil">
-          Cultura e uma data. O caderno de 42 semanas monta sozinho.
+          {manga
+            ? 'Manga e a data da colheita. A safra conta poda, vegetativo, indução e floração para trás.'
+            : 'Cultura e uma data. O caderno de 42 semanas monta sozinho.'}
         </p>
       </div>
       <form className="space-y-4" onSubmit={handleSubmit}>
@@ -61,6 +70,22 @@ export function PrimeirosPassos() {
             Uva
           </button>
         </div>
+        <DateField
+          label="Data desejada da colheita"
+          name="dataColheita"
+          value={dataColheita}
+          onChange={setDataColheita}
+          hint={manga ? 'É a data de onde saem as fases da safra.' : undefined}
+        />
+        {!dataColheita ? (
+          <DateField
+            label="Início do manejo"
+            name="dataReferencia"
+            value={dataReferencia}
+            onChange={setDataReferencia}
+            hint="Só se ainda não souber o dia da colheita."
+          />
+        ) : null}
         <Input
           label="Área (ha)"
           name="areaHectares"
@@ -69,23 +94,8 @@ export function PrimeirosPassos() {
           value={areaHectares}
           onChange={(event) => setAreaHectares(event.target.value)}
         />
-        <DateField
-          label="Data da colheita"
-          name="dataColheita"
-          value={dataColheita}
-          onChange={setDataColheita}
-          hint="Se ainda não souber a colheita, informe o início do manejo."
-        />
-        {!dataColheita ? (
-          <DateField
-            label="Início do manejo"
-            name="dataReferencia"
-            value={dataReferencia}
-            onChange={setDataReferencia}
-          />
-        ) : null}
         <Button type="submit" full disabled={!cultura || (!dataColheita && !dataReferencia)}>
-          Abrir o caderno
+          {manga && dataColheita ? 'Ver datas da mangueira' : 'Abrir o caderno'}
         </Button>
       </form>
     </Card>

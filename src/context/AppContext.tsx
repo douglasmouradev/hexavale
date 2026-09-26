@@ -44,6 +44,9 @@ function loadProdutor(): ConfigProdutor {
     dataReferencia: salvo.dataReferencia ?? null,
     dataColheita: salvo.dataColheita ?? null,
     areaHectares: salvo.areaHectares ?? null,
+    nomeResponsavel: salvo.nomeResponsavel ?? null,
+    municipio: salvo.municipio ?? null,
+    talhoes: salvo.talhoes ?? null,
   }
 }
 

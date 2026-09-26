@@ -1,5 +1,6 @@
 /** Cultura, área (ha) e datas que montam as 42 semanas. */
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -19,15 +20,22 @@ export function ProdutorPage() {
   const [dataReferencia, setDataReferencia] = useState(produtor.dataReferencia ?? '')
   const [dataColheita, setDataColheita] = useState(produtor.dataColheita ?? '')
   const [areaHectares, setAreaHectares] = useState(produtor.areaHectares ?? '')
+  const [nomeResponsavel, setNomeResponsavel] = useState(produtor.nomeResponsavel ?? '')
+  const [municipio, setMunicipio] = useState(produtor.municipio ?? '')
+  const [talhoes, setTalhoes] = useState(produtor.talhoes ?? '')
   const [saved, setSaved] = useState(false)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     salvarProdutor({
+      ...produtor,
       cultura,
       dataReferencia: dataReferencia || null,
       dataColheita: dataColheita || null,
       areaHectares: areaHectares.trim() || null,
+      nomeResponsavel: nomeResponsavel.trim() || null,
+      municipio: municipio.trim() || null,
+      talhoes: talhoes.trim() || null,
     })
     setSaved(true)
   }
@@ -78,7 +86,69 @@ export function ProdutorPage() {
       </div>
 
       <Card className="space-y-4">
+        <DateField
+          label="Data desejada da colheita"
+          name="dataColheita"
+          value={dataColheita}
+          onChange={(iso) => {
+            setDataColheita(iso)
+            setSaved(false)
+          }}
+          hint={
+            cultura === 'uva'
+              ? 'Com a colheita, as 42 semanas contam de trás para frente.'
+              : 'A mangueira conta poda, vegetativo, indução e floração a partir desta data.'
+          }
+        />
+        {!dataColheita ? (
+          <DateField
+            label="Início do manejo"
+            name="dataReferencia"
+            value={dataReferencia}
+            onChange={(iso) => {
+              setDataReferencia(iso)
+              setSaved(false)
+            }}
+            hint="Use se ainda não souber o dia da colheita."
+          />
+        ) : null}
+      </Card>
+
+      <Card className="space-y-4">
         <div className="grid gap-4 lg:grid-cols-3">
+        <Input
+          label="Quem responde pela safra"
+          name="nomeResponsavel"
+          autoComplete="name"
+          placeholder="Seu nome"
+          value={nomeResponsavel}
+          onChange={(event) => {
+            setNomeResponsavel(event.target.value)
+            setSaved(false)
+          }}
+        />
+        <Input
+          label="Município"
+          name="municipio"
+          autoComplete="address-level2"
+          placeholder="Petrolina"
+          value={municipio}
+          onChange={(event) => {
+            setMunicipio(event.target.value)
+            setSaved(false)
+          }}
+        />
+        <Input
+          label="Talhões"
+          name="talhoes"
+          inputMode="numeric"
+          placeholder="6"
+          value={talhoes}
+          onChange={(event) => {
+            setTalhoes(event.target.value)
+            setSaved(false)
+          }}
+        />
         <Input
           label="Área (ha)"
           name="areaHectares"
@@ -90,25 +160,6 @@ export function ProdutorPage() {
             setSaved(false)
           }}
           hint="Usada na calda, se o campo de área estiver vazio."
-        />
-        <DateField
-          label="Início do manejo"
-          name="dataReferencia"
-          value={dataReferencia}
-          onChange={(iso) => {
-            setDataReferencia(iso)
-            setSaved(false)
-          }}
-        />
-        <DateField
-          label="Data da colheita"
-          name="dataColheita"
-          value={dataColheita}
-          onChange={(iso) => {
-            setDataColheita(iso)
-            setSaved(false)
-          }}
-          hint="Se preencher a colheita, as 42 semanas contam de trás para frente."
         />
         </div>
       </Card>
@@ -124,9 +175,23 @@ export function ProdutorPage() {
       ) : null}
 
       {saved ? <Banner>Dados do produtor salvos neste aparelho.</Banner> : null}
+      {saved && (dataColheita || dataReferencia) && cultura !== 'uva' ? (
+        <Link to="/safra" className="block">
+          <Button type="button" variant="secondary" full>
+            Calcular a safra
+          </Button>
+        </Link>
+      ) : null}
+      {saved && (dataColheita || dataReferencia) ? (
+        <Link to="/ciclo" className="block">
+          <Button type="button" variant="outline" full>
+            Abrir ciclo de 42 semanas
+          </Button>
+        </Link>
+      ) : null}
 
       <StickyAction>
-        <Button type="submit" full disabled={!cultura}>
+        <Button type="submit" full disabled={!cultura || (!dataColheita && !dataReferencia)}>
           Salvar
         </Button>
       </StickyAction>

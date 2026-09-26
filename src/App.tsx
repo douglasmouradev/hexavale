@@ -86,6 +86,11 @@ const CalendarioPage = lazy(() =>
     default: module.CalendarioPage,
   })),
 )
+const CalcularSafraPage = lazy(() =>
+  import('@/pages/CalcularSafraPage').then((module) => ({
+    default: module.CalcularSafraPage,
+  })),
+)
 
 /** Fallback enquanto o chunk da rota ainda não chegou. */
 function Carregando() {
@@ -118,6 +123,7 @@ export default function App() {
                   <Route path="/calda" element={<CaldaOrganicaPage />} />
                   <Route path="/custo-calda" element={<CustoCaldaPage />} />
                   <Route path="/regulador" element={<ReguladorPage />} />
+                  <Route path="/safra" element={<CalcularSafraPage />} />
                   <Route path="/calendario" element={<CalendarioPage />} />
                   <Route path="/insumos" element={<InsumosPage />} />
                   <Route path="/mao-de-obra" element={<MaoDeObraPage />} />

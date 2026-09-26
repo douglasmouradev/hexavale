@@ -2,7 +2,10 @@
  * Calendário da mangueira: etapas a partir da data-alvo e custos
  * de mão de obra / hora-máquina nas semanas de cada intervalo.
  */
+import { parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
+
+export type ModoOperacao = 'manual' | 'mecanizado' | 'ambos'
 
 export interface TalhaoCalendario {
   nome: string
@@ -233,6 +236,84 @@ export function formatBrUtc(date: Date) {
   return `${d}/${m}/${date.getUTCFullYear()}`
 }
 
+/** Ano e semana ISO da data (como na planilha: 2026 · sem. 37). */
+export function isoAnoSemanaUtc(date: Date) {
+  const cursor = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  const weekday = cursor.getUTCDay() || 7
+  cursor.setUTCDate(cursor.getUTCDate() + 4 - weekday)
+  const year = cursor.getUTCFullYear()
+  const yearStart = new Date(Date.UTC(year, 0, 1))
+  const week = Math.ceil(((cursor.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return { year, week }
+}
+
+export function custoDaOperacao(
+  op: OperacaoSemana,
+  talhao: TalhaoCalendario,
+) {
+  const labor = laborCalc(op.labor)
+  const maquina = machineCalc(op.machine, talhao.jornadaHoras, talhao.nPlantas)
+  const rTotal = (labor?.rTotal ?? 0) + (maquina?.rTotal ?? 0)
+  const rPlanta = (labor?.rPlanta ?? 0) + (maquina?.rPlanta ?? 0)
+  return { labor, maquina, rTotal, rPlanta }
+}
+
+const NOME_MECANIZADO = /meca|roçag|rocag|turbo|atomiz|herbic/
+
+export function modoOperacao(op: OperacaoSemana): ModoOperacao | null {
+  const temMao = op.labor.prod > 0 && op.labor.prazo > 0
+  const temMaquina = op.machine.produtividade > 0 && op.machine.prazo > 0
+  if (temMao && !temMaquina) return 'manual'
+  if (temMaquina && !temMao) return 'mecanizado'
+  if (temMao && temMaquina) return 'ambos'
+  if (!op.name.trim()) return null
+  return NOME_MECANIZADO.test(op.name.toLocaleLowerCase('pt-BR')) ? 'mecanizado' : 'manual'
+}
+
+export function talhaoDoProdutor(
+  produtor: { talhoes: string | null; areaHectares: string | null },
+  atual: TalhaoCalendario,
+  plantas?: number | null,
+): TalhaoCalendario {
+  const area = parseDecimal(produtor.areaHectares ?? '')
+  const nomeBruto = produtor.talhoes?.trim() ?? ''
+  const nomeComTexto = nomeBruto && !/^\d+$/.test(nomeBruto) ? nomeBruto : atual.nome
+  return {
+    ...atual,
+    nome: nomeComTexto || atual.nome,
+    nPlantas: plantas && plantas > 0 ? plantas : atual.nPlantas,
+    areaHa: area && area > 0 ? area : atual.areaHa,
+  }
+}
+
+/** Atualiza o talhão e copia plantas/área/diária nas operações que ainda usavam o valor antigo. */
+export function sincronizarTalhao(variedade: VariedadeManga, talhao: TalhaoCalendario): VariedadeManga {
+  const antigo = variedade.talhao
+  return {
+    ...variedade,
+    talhao,
+    stages: variedade.stages.map((etapa) => ({
+      ...etapa,
+      weeks: etapa.weeks?.map((week) => ({
+        ...week,
+        ops: week.ops.map((op) => ({
+          ...op,
+          labor: {
+            ...op.labor,
+            nPlantas: op.labor.nPlantas === antigo.nPlantas ? talhao.nPlantas : op.labor.nPlantas,
+            valorDiaria:
+              op.labor.valorDiaria === antigo.valorDiaria ? talhao.valorDiaria : op.labor.valorDiaria,
+          },
+          machine: {
+            ...op.machine,
+            areaBase: op.machine.areaBase === antigo.areaHa ? talhao.areaHa : op.machine.areaBase,
+          },
+        })) as SemanaEtapa['ops'],
+      })),
+    })),
+  }
+}
+
 export function datasDasEtapas(variedade: VariedadeManga, dataAlvoIso: string) {
   const stages = variedade.stages
   const n = stages.length
@@ -273,8 +354,23 @@ export function machineCalc(machine: MachineOp, jornadaHoras: number, nPlantasTa
   return { totalHoras, maquinasNecessarias, horasEfetivas, rTotal, rHa, rPlanta }
 }
 
-export function custosDoCiclo(variedade: VariedadeManga) {
-  const entries: { nome: string; etapa: string; offset: number; rTotal: number }[] = []
+export interface CustoCicloEntry {
+  nome: string
+  etapa: string
+  offset: number
+  rTotal: number
+  pct: number
+}
+
+export interface CustosCiclo {
+  entries: CustoCicloEntry[]
+  total: number
+  porPlanta: number
+  porHa: number
+}
+
+export function custosDoCiclo(variedade: VariedadeManga): CustosCiclo {
+  const brutos: Omit<CustoCicloEntry, 'pct'>[] = []
   for (let i = 1; i < variedade.stages.length; i++) {
     const stage = variedade.stages[i]!
     const anterior = variedade.stages[i - 1]!
@@ -283,7 +379,7 @@ export function custosDoCiclo(variedade: VariedadeManga) {
         const lr = laborCalc(op.labor)
         const mr = machineCalc(op.machine, variedade.talhao.jornadaHoras, variedade.talhao.nPlantas)
         if (!lr && !mr) continue
-        entries.push({
+        brutos.push({
           nome: op.name || '(sem nome)',
           etapa: `${anterior.name} → ${stage.name}`,
           offset: week.offset,
@@ -292,13 +388,84 @@ export function custosDoCiclo(variedade: VariedadeManga) {
       }
     }
   }
-  const total = entries.reduce((sum, item) => sum + item.rTotal, 0)
+  const total = brutos.reduce((sum, item) => sum + item.rTotal, 0)
+  const entries = brutos
+    .sort((a, b) => b.rTotal - a.rTotal)
+    .map((item) => ({
+      ...item,
+      pct: total > 0 ? (item.rTotal / total) * 100 : 0,
+    }))
   return {
-    entries: entries.sort((a, b) => b.rTotal - a.rTotal),
+    entries,
     total,
     porPlanta: variedade.talhao.nPlantas > 0 ? total / variedade.talhao.nPlantas : 0,
     porHa: variedade.talhao.areaHa > 0 ? total / variedade.talhao.areaHa : 0,
   }
+}
+
+export interface EtapaRascunho {
+  id: string
+  name: string
+  days?: number
+}
+
+export function rascunhoDasEtapas(stages: EtapaCalendario[]): EtapaRascunho[] {
+  return stages.map((etapa, index) =>
+    index === 0
+      ? { id: etapa.id, name: etapa.name }
+      : { id: etapa.id, name: etapa.name, days: etapa.days ?? 0 },
+  )
+}
+
+export function rascunhoNovo(): EtapaRascunho[] {
+  return [
+    { id: createId(), name: '' },
+    { id: createId(), name: '', days: 0 },
+  ]
+}
+
+export function aplicarEdicaoVariedade(
+  variedade: VariedadeManga,
+  name: string,
+  talhao: TalhaoCalendario,
+  rascunho: EtapaRascunho[],
+): VariedadeManga {
+  const porId = new Map(variedade.stages.map((etapa) => [etapa.id, etapa]))
+  const stages = rascunho.map((item, index) => {
+    const antiga = porId.get(item.id)
+    if (index === 0) {
+      return { id: item.id || createId(), name: item.name.trim() || 'Etapa' }
+    }
+    const days = Math.max(0, item.days ?? 0)
+    const parcial: EtapaCalendario = {
+      id: item.id || createId(),
+      name: item.name.trim() || 'Etapa',
+      days,
+      weeks: antiga?.weeks,
+    }
+    return { ...parcial, weeks: regenerateWeeks(parcial, talhao) }
+  })
+  return sincronizarTalhao({ ...variedade, name: name.trim() || variedade.name, stages }, talhao)
+}
+
+export function montarNovaVariedade(
+  name: string,
+  talhao: TalhaoCalendario,
+  rascunho: EtapaRascunho[],
+): VariedadeManga {
+  const stages = rascunho.map((item, index) => {
+    if (index === 0) {
+      return { id: item.id || createId(), name: item.name.trim() || 'Etapa' }
+    }
+    const days = Math.max(0, item.days ?? 0)
+    return {
+      id: item.id || createId(),
+      name: item.name.trim() || 'Etapa',
+      days,
+      weeks: seedWeeks(days, {}, talhao),
+    }
+  })
+  return { id: createId(), name: name.trim(), talhao, stages }
 }
 
 export function variedadeSimples(name: string, p1: number, p2: number, p3: number, p4: number): VariedadeManga {
@@ -358,5 +525,19 @@ export function compactarCalendarioState<T>(state: T): T {
 
 export function expandirCalendarioState<T>(state: T): T {
   if (!temVariedades(state)) return state
-  return { ...state, variedades: state.variedades.map(expandirVariedade) }
+  const variedades = state.variedades.map(expandirVariedade)
+  const unica = variedades[0]
+  const semOperacao = variedades.every((item) =>
+    item.stages.every((etapa) => (etapa.weeks ?? []).every((week) => !semanaOcupada(week))),
+  )
+  if (
+    variedades.length === 1 &&
+    unica &&
+    unica.name.toLocaleLowerCase('pt-BR') === 'palmer' &&
+    semOperacao
+  ) {
+    const palmer = palmerPadrao()
+    return { ...state, variedades: [palmer], selecionadaId: palmer.id }
+  }
+  return { ...state, variedades }
 }

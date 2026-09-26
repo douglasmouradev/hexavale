@@ -57,7 +57,7 @@ export function SideNav() {
 
 function itemClass(isActive: boolean) {
   return cn(
-    'mb-0.5 block rounded-leaf px-3 py-2 text-sm',
+    'mb-0.5 block rounded-leaf px-3 py-2 text-sm leading-snug',
     isActive
       ? 'bg-white/12 font-medium text-white shadow-[inset_3px_0_0_var(--color-mango)]'
       : 'text-white/80 hover:bg-white/10 hover:text-white',

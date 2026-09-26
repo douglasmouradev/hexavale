@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDiaPorExtenso, parseDecimal } from '@/lib/format'
+import { formatCurrency, formatDiaPorExtenso, parseDecimal } from '@/lib/format'
 
 describe('parseDecimal', () => {
   it('lê vírgula decimal e ponto de milhar', () => {
@@ -18,6 +18,13 @@ describe('parseDecimal', () => {
   it('ignora vazio e texto', () => {
     expect(parseDecimal('')).toBeNull()
     expect(parseDecimal('abc')).toBeNull()
+  })
+})
+
+describe('formatCurrency', () => {
+  it('mostra 3 casas quando o litro fica abaixo de 5 centavos', () => {
+    expect(formatCurrency(0.021)).toContain('0,021')
+    expect(formatCurrency(4.2)).toContain('4,20')
   })
 })
 

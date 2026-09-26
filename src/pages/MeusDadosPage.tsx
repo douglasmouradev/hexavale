@@ -90,6 +90,9 @@ export function MeusDadosPage() {
       <Card>
         <h3 className="mb-1 font-medium text-ink">Caderno</h3>
         <Row label="Cultura" value={produtor.cultura ?? '—'} />
+        <Row label="Responsável" value={produtor.nomeResponsavel ?? '—'} />
+        <Row label="Município" value={produtor.municipio ?? '—'} />
+        <Row label="Talhões" value={produtor.talhoes ?? '—'} />
         <Row label="Área (ha)" value={produtor.areaHectares ?? '—'} />
         <p className="mt-3 text-sm text-soil">
           Calda, insumos, diária e ciclo também ficam aqui. Política: versão {POLITICA_VERSAO}.

@@ -35,6 +35,9 @@ export function lancarItensDeTeste(atual: ConfigProdutor): ConfigProdutor {
     areaHectares: atual.areaHectares || '12',
     dataReferencia: atual.dataReferencia || '2026-02-25',
     dataColheita: atual.dataColheita || '2026-12-15',
+    nomeResponsavel: atual.nomeResponsavel,
+    municipio: atual.municipio,
+    talhoes: atual.talhoes || '4',
   }
 
   const ureia = id()

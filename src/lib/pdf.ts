@@ -219,17 +219,25 @@ export function exportarCalendarioPdf(
   if (custos.entries.length) {
     autoTable(doc, {
       startY: lastTableY(doc) + 8,
-      head: [['Operacao', 'Intervalo', 'Dia', 'Custo']],
+      head: [['Operacao', 'Intervalo', 'Dia', 'Custo', '%']],
       body: [
         ...custos.entries.map((item) => [
           item.nome,
           item.etapa,
           String(item.offset),
           formatCurrency(item.rTotal),
+          `${formatNumber(
+            'pct' in item && typeof item.pct === 'number'
+              ? item.pct
+              : custos.total > 0
+                ? (item.rTotal / custos.total) * 100
+                : 0,
+            1,
+          )}%`,
         ]),
-        ['Total', '', '', formatCurrency(custos.total)],
-        ['Por planta', '', '', formatCurrency(custos.porPlanta)],
-        ['Por hectare', '', '', formatCurrency(custos.porHa)],
+        ['Total', '', '', formatCurrency(custos.total), '100%'],
+        ['Por planta', '', '', formatCurrency(custos.porPlanta), ''],
+        ['Por hectare', '', '', formatCurrency(custos.porHa), ''],
       ],
       headStyles: { fillColor: [31, 107, 58], textColor: 255 },
       styles: { fontSize: 8 },

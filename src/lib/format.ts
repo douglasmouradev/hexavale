@@ -26,9 +26,12 @@ export function isValidPhone(value: string): boolean {
 }
 
 export function formatCurrency(value: number): string {
+  const abs = Math.abs(value)
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: abs > 0 && abs < 0.05 ? 3 : 2,
   }).format(value)
 }
 

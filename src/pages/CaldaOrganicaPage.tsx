@@ -146,6 +146,25 @@ export function CaldaOrganicaPage() {
       >
         <Card className="space-y-4">
           <h2 className="text-lg font-bold text-ink">Tanque e área</h2>
+          <p className="text-sm leading-snug text-soil">
+            Dose por litro (ml/L, g/L). O valor em kg e R$ fica em Custo da calda.
+          </p>
+          <label className="flex items-center gap-3 border border-line bg-cream/50 px-3 py-3">
+            <input
+              type="checkbox"
+              className="h-5 w-5 accent-field"
+              checked={form.tanqueParcial}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  tanqueParcial: event.target.checked,
+                }))
+              }
+            />
+            <span className="text-sm font-semibold text-ink">
+              Último tanque parcial (só o volume da área)
+            </span>
+          </label>
           <div className="grid gap-3 lg:grid-cols-3">
             <Input
               label="Tanque (L)"
@@ -186,22 +205,9 @@ export function CaldaOrganicaPage() {
               }
             />
           </div>
-          <label className="flex items-center gap-3 border border-line bg-cream/50 px-3 py-3">
-            <input
-              type="checkbox"
-              className="h-5 w-5 accent-field"
-              checked={form.tanqueParcial}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  tanqueParcial: event.target.checked,
-                }))
-              }
-            />
-            <span className="text-sm font-semibold text-ink">
-              Último tanque parcial (só o volume da área)
-            </span>
-          </label>
+          <Link to="/custo-calda" className="block text-sm font-semibold leading-snug text-field">
+            Custo em kg e R$ (valor do litro e da operação no ciclo)
+          </Link>
         </Card>
 
         <Card className="space-y-4">
@@ -278,7 +284,7 @@ export function CaldaOrganicaPage() {
             Ver catálogo
           </Link>
           <Link to="/custo-calda" className="block text-center text-sm font-semibold text-field">
-            Custo do tanque em kg
+            Custo da calda (kg e R$)
           </Link>
         </Card>
 

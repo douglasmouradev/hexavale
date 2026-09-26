@@ -1,13 +1,17 @@
 /** Barra baixa de ferramenta: só no celular e no tablet. */
 import { NavLink } from 'react-router-dom'
-import { BOTTOM_NAV_ITEMS } from '@/components/layout/navItems'
+import { bottomNavItems } from '@/components/layout/navItems'
+import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/format'
 
 export function BottomNav() {
+  const { produtor } = useApp()
+  const itens = bottomNavItems(produtor.cultura)
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] desk:hidden">
       <ul className="mx-auto grid max-w-lg grid-cols-5">
-        {BOTTOM_NAV_ITEMS.map((item) => (
+        {itens.map((item) => (
           <li key={item.to}>
             <NavLink
               to={item.to}

@@ -2,11 +2,12 @@
  * Ciclo da safra por fase (poda, florada, colheita…).
  * Linhas lançadas de Insumos/Diária não são apagadas pelos campos extras.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { DateField } from '@/components/ui/DateField'
 import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -25,7 +26,7 @@ import {
 import { cn, formatCurrency, parseDecimal } from '@/lib/format'
 import { exportarCicloPdf } from '@/lib/exportarPdf'
 import { fecharSafraAtual, lerSafras, produtorAposFechar } from '@/lib/safra'
-import type { CicloCultura, MaoDeObraSemana, SafraArquivada, SemanaCiclo } from '@/types/models'
+import { PRODUTOR_PADRAO, type CicloCultura, type MaoDeObraSemana, type SafraArquivada, type SemanaCiclo } from '@/types/models'
 
 function formatDia(iso: string) {
   const [y, m, d] = iso.split('-')
@@ -66,6 +67,63 @@ function moneyField(value: number) {
 
 function chaveFase(inicio: number, fim: number) {
   return `${inicio}-${fim}`
+}
+
+function AbrirCicloComData() {
+  const { produtor, salvarProdutor } = useApp()
+  const [dataColheita, setDataColheita] = useState(produtor.dataColheita ?? '')
+  const [dataReferencia, setDataReferencia] = useState(produtor.dataReferencia ?? '')
+  const manga = produtor.cultura !== 'uva'
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!dataColheita && !dataReferencia) return
+    salvarProdutor({
+      ...produtor,
+      cultura: produtor.cultura ?? (manga ? 'manga' : null),
+      dataColheita: dataColheita || null,
+      dataReferencia: dataReferencia || null,
+    })
+  }
+
+  return (
+    <Card className="space-y-4">
+      <div>
+        <p className="font-bold text-ink">Falta a data do ciclo</p>
+        <p className="mt-1 text-sm text-soil">
+          {manga
+            ? 'Informe a colheita aqui. O caderno de 42 semanas monta na hora; Calcular safra mostra a ação de cada fase.'
+            : 'Informe a colheita ou o início do manejo para montar as 42 semanas.'}
+        </p>
+      </div>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <DateField
+          label="Data desejada da colheita"
+          name="cicloDataColheita"
+          value={dataColheita}
+          onChange={setDataColheita}
+        />
+        {!dataColheita ? (
+          <DateField
+            label="Início do manejo"
+            name="cicloDataReferencia"
+            value={dataReferencia}
+            onChange={setDataReferencia}
+          />
+        ) : null}
+        <Button type="submit" full disabled={!dataColheita && !dataReferencia}>
+          Montar o ciclo
+        </Button>
+      </form>
+      {manga ? (
+        <Link to="/safra" className="block">
+          <Button type="button" variant="secondary" full>
+            Calcular a safra
+          </Button>
+        </Link>
+      ) : null}
+    </Card>
+  )
 }
 
 export function CicloCulturaPage() {
@@ -142,15 +200,7 @@ export function CicloCulturaPage() {
     return (
       <div className="space-y-4">
         {avisoFechar ? <Banner>{avisoFechar}</Banner> : null}
-        <Card className="space-y-3">
-          <p className="font-bold text-ink">Falta a data do ciclo</p>
-          <p className="text-sm text-soil">
-            Em Produtor, informe a data de manejo ou a data da colheita da nova safra.
-          </p>
-          <Link to="/produtor" className="block">
-            <Button full>Abrir Produtor</Button>
-          </Link>
-        </Card>
+        <AbrirCicloComData />
         <CompararSafras safras={safras} />
         <ListaSafras safras={safras} propriedade={propriedade} />
       </div>
@@ -165,8 +215,8 @@ export function CicloCulturaPage() {
         {produtor.cultura !== 'uva' ? (
           <p className="text-sm text-white/80">
             Caderno semanal.{' '}
-            <Link to="/calendario" className="text-mango-light underline decoration-mango-light/50">
-              Datas da mangueira
+            <Link to="/safra" className="text-mango-light underline decoration-mango-light/50">
+              Datas da safra
             </Link>
           </p>
         ) : null}
@@ -430,10 +480,10 @@ function ListaSafras({
                   full
                   onClick={() =>
                     exportarCicloPdf(safra.semanas, safra.totais, propriedade, {
+                      ...PRODUTOR_PADRAO,
                       cultura: safra.cultura,
                       dataReferencia: safra.dataInicio,
                       dataColheita: safra.dataColheita,
-                      areaHectares: null,
                     })
                   }
                 >

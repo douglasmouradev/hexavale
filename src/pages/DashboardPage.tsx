@@ -1,8 +1,8 @@
-/** Home: semana e custo; ferramentas em linha de caderno, sem ícone colorido. */
+/** Home: cartão do produtor, semana e ferramentas do campo com ícone. */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PrimeirosPassos } from '@/components/caderno/PrimeirosPassos'
-import { BOTTOM_NAV_PATHS } from '@/components/layout/navItems'
+import { ModuleIcon } from '@/components/layout/ModuleIcon'
 import { InstalarAppCard } from '@/components/pwa/InstalarAppCard'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -10,10 +10,11 @@ import { GraficoPizza } from '@/components/ui/GraficoPizza'
 import { Metric } from '@/components/ui/Metric'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
-import { MODULE_GROUPS, culturaLabel, modulesVisiveis } from '@/data/modules'
+import { culturaLabel, modulesVisiveis } from '@/data/modules'
 import { lancarItensDeTeste } from '@/lib/amostra'
+import { contarPlantasInsumos } from '@/lib/caderno'
 import { gerarSemanasCiclo, mesclarSemanas, semanaHoje, totaisCiclo } from '@/lib/ciclo'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatNumber, parseDecimal } from '@/lib/format'
 import { lerSafras } from '@/lib/safra'
 import { readStore } from '@/storage/localStore'
 import type { CaldaFormState } from '@/hooks/useCaldaForm'
@@ -29,6 +30,11 @@ function saudacao() {
 function formatDia(iso: string) {
   const [, m, d] = iso.split('-')
   return `${d}/${m}`
+}
+
+function inicial(nome: string) {
+  const letra = nome.trim().charAt(0)
+  return letra ? letra.toLocaleUpperCase('pt-BR') : 'H'
 }
 
 export function DashboardPage() {
@@ -58,20 +64,67 @@ export function DashboardPage() {
   const ultimaSafra = lerSafras()[0]
 
   const visiveis = modulesVisiveis(produtor.cultura)
-  const atalhos = visiveis.filter((module) => !BOTTOM_NAV_PATHS.includes(module.to))
   const precisaSetup = !produtor.cultura || !temData
+  const nomeDestaque = produtor.nomeResponsavel || propriedade?.nome || 'Produtor'
+  const subtitulo = [
+    produtor.nomeResponsavel ? propriedade?.nome : null,
+    produtor.municipio,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  const area = parseDecimal(produtor.areaHectares ?? '')
+  const plantas = contarPlantasInsumos()
 
   return (
     <div className="space-y-5">
       <div className="desk:hidden">
         <p className="font-display text-sm font-medium italic text-soil">{saudacao()}</p>
-        <h1 className="font-display text-[1.65rem] leading-[1.15] font-semibold text-field">
-          {propriedade?.nome}
-        </h1>
       </div>
       <p className="font-display hidden text-base font-medium italic text-soil desk:block">
         {saudacao()}
       </p>
+
+      <Link to="/produtor" className="block">
+        <Card>
+          <div className="flex items-start gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-mango text-lg font-bold text-white">
+              {inicial(nomeDestaque)}
+            </span>
+            <div className="min-w-0">
+              <p className="font-display text-lg font-semibold leading-tight text-field">
+                {nomeDestaque}
+              </p>
+              <p className="mt-0.5 text-sm leading-snug text-soil">
+                {subtitulo || 'Toque para completar o cadastro'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold tracking-wide text-soil uppercase">
+                Talhões
+              </p>
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-field">
+                {produtor.talhoes?.trim() || '—'}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold tracking-wide text-soil uppercase">Área</p>
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-field">
+                {area === null ? '—' : `${formatNumber(area, 1)}ha`}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold tracking-wide text-soil uppercase">
+                Plantas
+              </p>
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-field">
+                {plantas === null ? '—' : formatNumber(plantas, 0)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </Link>
 
       <div className="grid gap-5 lg:grid-cols-5">
         {precisaSetup ? (
@@ -81,7 +134,7 @@ export function DashboardPage() {
         ) : (
         <Card tone="field" className="space-y-4 lg:col-span-3">
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-mango-light">
                 {atual
                   ? `Semana ${atual.numero} de 42`
@@ -103,7 +156,7 @@ export function DashboardPage() {
               ) : null}
             </div>
             {atual ? (
-              <span className="text-sm font-medium text-white/80">{progresso}%</span>
+              <span className="shrink-0 text-sm font-medium text-white/80">{progresso}%</span>
             ) : null}
           </div>
 
@@ -181,34 +234,34 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="desk:hidden">
-        {MODULE_GROUPS.map((group) => {
-          const itens = atalhos.filter((module) => module.group === group.id)
-          if (!itens.length) return null
-          return (
-            <div key={group.id} className="mb-5 last:mb-0">
-              <p className="mb-1 text-sm text-soil">{group.label}</p>
-              <Card className="grid grid-cols-1 gap-px overflow-hidden bg-line p-0">
-                {itens.map((module) => (
-                  <Link
-                    key={module.to}
-                    to={module.to}
-                    className="flex min-h-14 items-center justify-between gap-3 bg-paper px-4 py-3"
-                  >
-                    <span>
-                      <span className="block font-medium text-field">{module.title}</span>
-                      <span className="block text-sm text-soil">{module.description}</span>
-                    </span>
-                  </Link>
-                ))}
-              </Card>
-            </div>
-          )
-        })}
+      <div>
+        <p className="mb-1 text-sm text-soil">Ferramentas do campo</p>
+        <Card className="grid grid-cols-1 gap-px overflow-hidden bg-line p-0">
+          {visiveis.map((module) => (
+            <Link
+              key={module.to}
+              to={module.to}
+              className="flex min-h-14 items-center gap-3 bg-paper px-4 py-3"
+            >
+              <ModuleIcon name={module.icon} />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium leading-snug text-field">{module.title}</span>
+                <span className="block text-sm leading-snug text-soil">{module.description}</span>
+              </span>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5 shrink-0 text-mango"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                aria-hidden
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          ))}
+        </Card>
       </div>
-      <p className="hidden text-sm text-soil desk:block">
-        As ferramentas estão no menu à esquerda.
-      </p>
 
       <Button variant="outline" full onClick={aplicarTeste}>
         Lançar itens de teste

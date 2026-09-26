@@ -10,7 +10,7 @@ export function ChipCultura({ cultura }: { cultura: Cultura | null }) {
   return (
     <span
       className={cn(
-        'rounded-chip px-2.5 py-0.5 text-xs font-semibold',
+        'whitespace-nowrap rounded-chip px-2.5 py-0.5 text-xs font-semibold',
         vazia && 'bg-cream text-soil',
         !vazia && uva && 'bg-grape text-white',
         !vazia && !uva && 'bg-mango text-white',

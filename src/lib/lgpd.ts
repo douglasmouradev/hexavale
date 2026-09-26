@@ -29,6 +29,7 @@ export interface PacoteTitular {
   custoCalda: unknown
   regulador: unknown
   calendario: unknown
+  calcularSafra: unknown
 }
 
 export function lerConsentimento(): ConsentimentoLgpd | null {
@@ -66,6 +67,7 @@ export function coletarDadosTitular(): PacoteTitular {
     custoCalda: readStore(STORAGE_KEYS.custoCalda),
     regulador: readStore(STORAGE_KEYS.regulador),
     calendario: readStore(STORAGE_KEYS.calendario),
+    calcularSafra: readStore(STORAGE_KEYS.calcularSafra),
   }
 }
 
@@ -161,11 +163,16 @@ function parseProdutor(value: unknown): ConfigProdutor | null {
     typeof value.areaHectares === 'string' || value.areaHectares === null
       ? value.areaHectares
       : null
+  const texto = (campo: unknown) =>
+    typeof campo === 'string' || campo === null ? campo : null
   return {
     cultura: cultura === 'manga' || cultura === 'uva' ? cultura : null,
     dataReferencia: parseIsoDate(value.dataReferencia),
     dataColheita: parseIsoDate(value.dataColheita),
     areaHectares: area,
+    nomeResponsavel: texto(value.nomeResponsavel),
+    municipio: texto(value.municipio),
+    talhoes: texto(value.talhoes),
   }
 }
 
@@ -210,6 +217,7 @@ export function parsePacoteTitular(raw: unknown): PacoteTitular | null {
     custoCalda: parseObjetoCaderno(raw.custoCalda),
     regulador: parseObjetoCaderno(raw.regulador),
     calendario: parseObjetoCaderno(raw.calendario),
+    calcularSafra: parseObjetoCaderno(raw.calcularSafra),
   }
   const temCaderno = Boolean(
     pacote.propriedade ||
@@ -222,7 +230,8 @@ export function parsePacoteTitular(raw: unknown): PacoteTitular | null {
       pacote.safras ||
       pacote.custoCalda ||
       pacote.regulador ||
-      pacote.calendario,
+      pacote.calendario ||
+      pacote.calcularSafra,
   )
   if (!temCaderno) return null
   return pacote
@@ -240,6 +249,7 @@ export function restaurarDadosTitular(pacote: PacoteTitular) {
   if (pacote.custoCalda) writeStore(STORAGE_KEYS.custoCalda, pacote.custoCalda)
   if (pacote.regulador) writeStore(STORAGE_KEYS.regulador, pacote.regulador)
   if (pacote.calendario) writeStore(STORAGE_KEYS.calendario, pacote.calendario)
+  if (pacote.calcularSafra) writeStore(STORAGE_KEYS.calcularSafra, pacote.calcularSafra)
   if (pacote.consentimento) writeStore(STORAGE_KEYS.consentimento, pacote.consentimento)
 }
 

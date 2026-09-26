@@ -1,4 +1,4 @@
-/** Vídeo do anúncio; começa mudo para o navegador permitir autoplay. */
+/** Vídeo do anúncio em um único quadro; X só libera depois do tempo mínimo. */
 import { useEffect, useRef, useState } from 'react'
 import { getAdPolicy, type AdPlacement } from '@/lib/ads'
 import { Button } from '@/components/ui/Button'
@@ -47,14 +47,23 @@ export function AdInterstitial({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/90 p-4 sm:items-center lg:p-8"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/90 p-4 sm:items-center lg:p-8"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ad-title"
     >
       <div className="flex w-full max-w-md flex-col overflow-hidden rounded-leaf bg-paper shadow-lift lg:max-w-xl">
-        <div className="border-b border-line bg-field px-4 py-2 text-sm font-medium text-white">
-          Publicidade
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-field px-4 py-2 text-sm font-medium text-white">
+          <span>Anúncio</span>
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-leaf text-lg leading-none disabled:opacity-30"
+            disabled={!canSkip}
+            onClick={onComplete}
+            aria-label={canSkip ? 'Fechar anúncio' : 'Aguarde para fechar'}
+          >
+            ×
+          </button>
         </div>
 
         <div className="space-y-4 p-4">
@@ -62,24 +71,26 @@ export function AdInterstitial({
             {titulo}
           </h2>
 
-          <video
-            ref={videoRef}
-            key={videoUrl}
-            src={videoUrl}
-            className="aspect-video w-full rounded-leaf bg-ink"
-            autoPlay
-            muted={placement !== 'login'}
-            playsInline
-            preload="auto"
-            controls={false}
-            onEnded={() => {
-              if (canSkip) onComplete()
-            }}
-          />
+          <div className="aspect-video overflow-hidden rounded-leaf bg-ink">
+            <video
+              ref={videoRef}
+              key={videoUrl}
+              src={videoUrl}
+              className="h-full w-full object-cover"
+              autoPlay
+              muted={placement !== 'login'}
+              playsInline
+              preload="auto"
+              controls={false}
+              onEnded={() => {
+                if (canSkip) onComplete()
+              }}
+            />
+          </div>
 
           <div className="flex items-center justify-between gap-4">
             <p className="font-display text-2xl font-bold text-field">{secondsLeft}s</p>
-            <p className="flex-1 text-sm text-soil">
+            <p className="flex-1 text-sm leading-snug text-soil">
               {canSkip
                 ? 'Pode seguir.'
                 : `Pular libera em ${Math.max(policy.skipAfterSeconds - elapsed, 0)}s`}

@@ -14,6 +14,9 @@ export interface ConfigProdutor {
   dataReferencia: string | null
   dataColheita: string | null
   areaHectares: string | null
+  nomeResponsavel: string | null
+  municipio: string | null
+  talhoes: string | null
 }
 
 export type UnidadeDose = 'ml/L' | 'g/L' | 'ml/ha' | 'g/ha' | 'L/ha' | 'kg/ha'
@@ -116,4 +119,7 @@ export const PRODUTOR_PADRAO: ConfigProdutor = {
   dataReferencia: null,
   dataColheita: null,
   areaHectares: null,
+  nomeResponsavel: null,
+  municipio: null,
+  talhoes: null,
 }

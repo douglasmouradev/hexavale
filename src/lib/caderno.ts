@@ -10,6 +10,7 @@ import {
   semanaHoje,
   hojeIso,
 } from '@/lib/ciclo'
+import { parseDecimal } from '@/lib/format'
 import { readStore, writeStore } from '@/storage/localStore'
 import type {
   CicloCultura,
@@ -31,6 +32,17 @@ export type LancamentoErro = {
 }
 
 export type LancamentoResult = LancamentoOk | LancamentoErro
+
+/** Soma plantas P+M+G lançadas em Insumos, se houver. */
+export function contarPlantasInsumos(): number | null {
+  const dados = readStore<{ P?: string; M?: string; G?: string }>(STORAGE_KEYS.insumos)
+  if (!dados) return null
+  const total =
+    (parseDecimal(dados.P ?? '') ?? 0) +
+    (parseDecimal(dados.M ?? '') ?? 0) +
+    (parseDecimal(dados.G ?? '') ?? 0)
+  return total > 0 ? total : null
+}
 
 /** Junta o calendário gerado pelas datas do Produtor com o que já foi lançado. */
 export function semanasDoProdutor(produtor: ConfigProdutor): SemanaCiclo[] {

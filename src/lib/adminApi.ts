@@ -41,14 +41,29 @@ export interface AdVideo {
 
 /** Pedido do vídeo atual — sem telefone, nome ou caderno do produtor. */
 export async function fetchCurrentAd() {
-  try {
-    const response = await fetch(`/api/ads/atual?t=${Date.now()}`, { cache: 'no-store' })
-    const tipo = response.headers.get('content-type') || ''
-    if (!response.ok || !tipo.includes('application/json')) return null
-    const data = (await response.json()) as { id: number; titulo: string; url: string }
-    if (!data?.url) return null
-    return data
-  } catch {
-    return null
+  for (let tentativa = 0; tentativa < 3; tentativa += 1) {
+    try {
+      const response = await fetch(`/api/ads/atual?t=${Date.now()}`, { cache: 'no-store' })
+      const tipo = response.headers.get('content-type') || ''
+      if (!tipo.includes('application/json')) {
+        if (tentativa < 2) continue
+        return null
+      }
+      if (response.status === 404) return null
+      if (!response.ok) {
+        if (tentativa < 2) continue
+        return null
+      }
+      const data = (await response.json()) as { id: number; titulo: string; url: string }
+      if (!data?.url) return null
+      return data
+    } catch {
+      if (tentativa < 2) {
+        await new Promise((resolve) => window.setTimeout(resolve, 400))
+        continue
+      }
+      return null
+    }
   }
+  return null
 }

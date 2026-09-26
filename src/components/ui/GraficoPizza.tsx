@@ -53,11 +53,13 @@ export function GraficoPizza({
   formatValor,
   centro,
   invert = false,
+  rotuloParte = 'do custo',
 }: {
   fatias: FatiaPizza[]
   formatValor: (value: number) => string
   centro?: string
   invert?: boolean
+  rotuloParte?: string
 }) {
   const [ativa, setAtiva] = useState<number | null>(null)
 
@@ -217,7 +219,7 @@ export function GraficoPizza({
                 aria-pressed={destaque}
                 onClick={() => alternar(fatia.index)}
                 className={cn(
-                  'flex min-h-11 w-full items-center gap-2 rounded-leaf px-2 text-left text-[13px] leading-snug',
+                  'flex min-h-11 w-full items-center gap-2 rounded-leaf px-2 py-1.5 text-left text-[13px] leading-snug',
                   destaque && (invert ? 'bg-white/12' : 'bg-cream'),
                 )}
               >
@@ -225,9 +227,15 @@ export function GraficoPizza({
                   className="h-2.5 w-2.5 shrink-0 rounded-chip"
                   style={{ background: fatia.cor }}
                 />
-                <span className="min-w-0 flex-1">{fatia.label}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">{fatia.label}</span>
+                  <span className={invert ? 'block text-white/65' : 'block text-soil'}>
+                    {fatia.percentual}% {rotuloParte}
+                    {fatia.detalhe ? ` · ${fatia.detalhe}` : ''}
+                  </span>
+                </span>
                 <span className="shrink-0 text-sm font-semibold tabular-nums tracking-tight">
-                  {fatia.percentual}%
+                  {formatValor(fatia.value)}
                 </span>
               </button>
             </li>

@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n web,api -c green,blue \"vite\" \"node --watch server/index.js\"",
+    "dev:web": "vite",
+    "dev:all": "npm run dev",
     "server": "node --watch server/index.js",
-    "dev:all": "concurrently -n web,api -c green,blue \"npm run dev\" \"npm run server\"",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "start": "node server/index.js --app",

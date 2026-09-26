@@ -197,6 +197,15 @@ async function ensureSchema() {
     ])
     console.log('Administrador atualizado a partir do .env.')
   }
+
+  const [noAr] = await pool.query('SELECT id FROM ad_videos WHERE ativo = 1 LIMIT 1')
+  if (noAr.length === 0) {
+    const [ultimo] = await pool.query('SELECT id FROM ad_videos ORDER BY atualizado_em DESC LIMIT 1')
+    if (ultimo[0]) {
+      await pool.query('UPDATE ad_videos SET ativo = 1 WHERE id = ?', [ultimo[0].id])
+      console.log('Vídeo de anúncio recolocado no ar.')
+    }
+  }
 }
 
 const app = express()
@@ -273,16 +282,23 @@ app.post('/api/admin/login', async (req, res) => {
   res.json({ token, admin: { id: admin.id, nome: admin.nome, email: admin.email } })
 })
 
-/** Vídeo ativo para o app. Público: não exige JWT e não lê dados do produtor. */
+/** Vídeo do anúncio. Se ninguém estiver “no ar”, usa o último arquivo enviado. */
 app.get('/api/ads/atual', async (_req, res) => {
-  const [rows] = await pool.query(
+  const [ativos] = await pool.query(
     'SELECT id, titulo, arquivo FROM ad_videos WHERE ativo = 1 ORDER BY atualizado_em DESC LIMIT 1',
   )
-  const video = rows[0]
+  let video = ativos[0]
   if (!video) {
+    const [todos] = await pool.query(
+      'SELECT id, titulo, arquivo FROM ad_videos ORDER BY atualizado_em DESC LIMIT 1',
+    )
+    video = todos[0]
+  }
+  if (!video || !fs.existsSync(path.join(uploadsDir, video.arquivo))) {
     res.status(404).json({ error: 'Nenhum vídeo ativo.' })
     return
   }
+  res.set('Cache-Control', 'no-store')
   res.json({
     id: video.id,
     titulo: video.titulo,

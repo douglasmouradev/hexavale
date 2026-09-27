@@ -1,20 +1,14 @@
 /** Upload e ativação dos vídeos que o app mostra no anúncio. */
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Logo } from '@/components/brand/Logo'
+import { Link } from 'react-router-dom'
+import { AdminHeader } from '@/components/admin/AdminHeader'
 import { Banner } from '@/components/ui/Banner'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import {
-  adminRequest,
-  clearAdminToken,
-  getAdminToken,
-  type AdVideo,
-} from '@/lib/adminApi'
+import { adminRequest, getAdminToken, type AdVideo } from '@/lib/adminApi'
 
 export function AdminVideosPage() {
-  const navigate = useNavigate()
   const [videos, setVideos] = useState<AdVideo[]>([])
   const [titulo, setTitulo] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -77,25 +71,7 @@ export function AdminVideosPage() {
 
   return (
     <div className="min-h-svh bg-cream">
-      <header className="bg-field text-white">
-        <div className="mx-auto flex w-full max-w-lg items-center gap-3 px-4 py-4 lg:max-w-5xl lg:px-8">
-          <Logo size={36} />
-          <div className="flex-1">
-            <h1 className="font-display text-xl font-bold">Propagandas</h1>
-            <p className="text-sm text-white/70">Vídeos do anúncio no app</p>
-          </div>
-          <button
-            type="button"
-            className="text-sm font-medium text-mango-light"
-            onClick={() => {
-              clearAdminToken()
-              navigate('/admin/login', { replace: true })
-            }}
-          >
-            Sair
-          </button>
-        </div>
-      </header>
+      <AdminHeader subtitulo="Vídeos do anúncio no app" />
 
       <div className="mx-auto max-w-lg px-4 py-5 pb-8 lg:grid lg:max-w-5xl lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8">
 

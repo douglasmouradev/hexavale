@@ -10,7 +10,7 @@ export function Card({ className, tone = 'plain', ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-leaf p-4',
+        'min-w-0 max-w-full overflow-hidden rounded-leaf p-4',
         tone === 'plain' && 'border border-line bg-paper text-ink shadow-paper',
         tone === 'field' && 'border-l-4 border-mango bg-field text-white shadow-none',
         className,

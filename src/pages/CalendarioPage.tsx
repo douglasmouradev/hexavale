@@ -16,7 +16,7 @@ import { Select } from '@/components/ui/Select'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
-import { usePersistedState } from '@/hooks/usePersistedState'
+import { useSessionState } from '@/hooks/useSessionState'
 import { contarPlantasInsumos } from '@/lib/caderno'
 import {
   addDaysUtc,
@@ -78,7 +78,7 @@ const SUGESTOES_OP = [
 export function CalendarioPage() {
   const { propriedade, produtor, salvarProdutor } = useApp()
   const { showInterstitial } = useAds()
-  const [form, setForm] = usePersistedState(STORAGE_KEYS.calendario, INITIAL)
+  const [form, setForm] = useSessionState(STORAGE_KEYS.calendario, INITIAL)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -238,8 +238,8 @@ export function CalendarioPage() {
   )
 
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[minmax(16rem,19rem)_minmax(0,1fr)]">
-      <Card className="space-y-3">
+    <div className="grid w-full min-w-0 items-start gap-5 lg:grid-cols-[minmax(16rem,19rem)_minmax(0,1fr)]">
+      <Card className="min-w-0 space-y-3 overflow-hidden">
         <div>
           <h2 className="font-display text-lg font-semibold text-field">Variedades e talhão</h2>
           <p className="mt-1 text-sm text-soil">
@@ -270,7 +270,7 @@ export function CalendarioPage() {
                     })
                   }
                 />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid min-w-0 grid-cols-2 gap-2">
                   <Input
                     label="Nº de plantas"
                     name={`edit-plantas-${item.id}`}
@@ -349,15 +349,20 @@ export function CalendarioPage() {
           }
 
           return (
-            <div key={item.id} className="border-t border-line pt-3 first:border-0 first:pt-0">
+            <div key={item.id} className="min-w-0 border-t border-line pt-3 first:border-0 first:pt-0">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="font-semibold text-ink">{item.name}</p>
+                <p className="min-w-0 truncate font-semibold text-ink">{item.name}</p>
                 <p className="shrink-0 text-xs text-soil">{diasTotais(item)} dias</p>
               </div>
-              <p className="mt-1 text-xs leading-snug text-soil">
-                {item.stages.map((etapa) => etapa.name || '—').join(' → ')}
+              <p className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs leading-snug text-soil">
+                {item.stages.map((etapa, index) => (
+                  <span key={etapa.id} className="inline-flex max-w-full items-center gap-1">
+                    {index > 0 ? <span className="shrink-0 text-soil/50">→</span> : null}
+                    <span className="min-w-0 break-words">{etapa.name || '—'}</span>
+                  </span>
+                ))}
               </p>
-              <p className="mt-1 text-[11px] text-soil">
+              <p className="mt-1 break-words text-[11px] leading-snug text-soil">
                 {item.talhao.nome || 'Talhão'} · {formatNumber(item.talhao.nPlantas, 0)} plantas ·{' '}
                 {formatNumber(item.talhao.areaHa, 1)} ha
               </p>
@@ -417,7 +422,7 @@ export function CalendarioPage() {
               value={addDraft.talhaoNome}
               onChange={(event) => setAddDraft({ ...addDraft, talhaoNome: event.target.value })}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid min-w-0 grid-cols-2 gap-2">
               <Input
                 label="Nº de plantas"
                 name="newNPlantas"
@@ -464,8 +469,8 @@ export function CalendarioPage() {
         ) : null}
       </Card>
 
-      <div className="space-y-5">
-        <Card className="space-y-4">
+      <div className="min-w-0 space-y-5">
+        <Card className="min-w-0 space-y-4 overflow-hidden">
           <h2 className="font-display text-lg font-semibold text-field">Calculadora</h2>
           <p className="text-sm text-soil">
             Escolha a variedade e a data desejada da última etapa para gerar o calendário do ciclo.
@@ -488,37 +493,40 @@ export function CalendarioPage() {
               ))}
             </Select>
             <DateField
-              label={`Data desejada: ${ultimaEtapa?.name || 'última etapa'}`}
+              label="Data desejada"
               name="dataAlvo"
               value={form.dataAlvo}
               onChange={gravarColheita}
+              hint={ultimaEtapa?.name ? `Última etapa: ${ultimaEtapa.name}` : undefined}
             />
-            <Button type="button" variant="secondary" onClick={handleCalcular}>
+            <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleCalcular}>
               Calcular
             </Button>
           </div>
 
-          <div ref={resultRef}>
+          <div ref={resultRef} className="min-w-0">
             {datas ? (
               <>
-                <div className="relative mt-4 space-y-1 border-l border-line pl-6">
+                <div className="relative mt-4 min-w-0 space-y-1 border-l border-line pl-5 sm:pl-6">
                   {variedade.stages.map((etapa, index) => {
                     const data = datas[index]
                     const isTarget = index === variedade.stages.length - 1
                     const proxima = variedade.stages[index + 1]
                     const semanas = proxima?.weeks ?? []
                     const planoId = proxima?.id ?? etapa.id
-                    const aberto = planosAbertos[planoId] ?? index === 0
+                    const aberto = Boolean(planosAbertos[planoId])
                     return (
-                      <div key={etapa.id}>
-                        <div className="relative pb-2">
+                      <div key={etapa.id} className="min-w-0">
+                        <div className="relative min-w-0 pb-2">
                           <span
                             className={cn(
-                              'absolute -left-6 top-1.5 h-2.5 w-2.5 -translate-x-[5px] rounded-full border-2 bg-paper',
+                              'absolute -left-5 top-1.5 h-2.5 w-2.5 -translate-x-[5px] rounded-full border-2 bg-paper sm:-left-6',
                               isTarget ? 'border-mango bg-mango' : 'border-soil',
                             )}
                           />
-                          <p className="text-sm font-semibold text-ink">{etapa.name || '(sem nome)'}</p>
+                          <p className="break-words text-sm font-semibold text-ink">
+                            {etapa.name || '(sem nome)'}
+                          </p>
                           <p
                             className={cn(
                               'font-display text-xl font-semibold',
@@ -535,35 +543,42 @@ export function CalendarioPage() {
                         </div>
 
                         {proxima ? (
-                          <div className="mb-5">
+                          <div className="mb-5 min-w-0">
                             <button
                               type="button"
-                              className="py-1 text-left text-[12.5px] text-soil"
+                              className="w-full py-1.5 text-left text-[12.5px] leading-snug text-soil"
                               onClick={() =>
                                 setPlanosAbertos((atual) => ({ ...atual, [planoId]: !aberto }))
                               }
                             >
-                              {aberto ? '▾' : '▸'} Plano de operações — {etapa.name} → {proxima.name}{' '}
-                              ({semanas.length} semanas)
+                              <span className="inline-flex max-w-full flex-wrap items-baseline gap-x-1">
+                                <span className="shrink-0">{aberto ? '▾' : '▸'} Plano —</span>
+                                <span className="min-w-0 break-words">{etapa.name}</span>
+                                <span className="shrink-0 text-soil/50">→</span>
+                                <span className="min-w-0 break-words">{proxima.name}</span>
+                                <span className="shrink-0 whitespace-nowrap">
+                                  ({semanas.length} sem.)
+                                </span>
+                              </span>
                             </button>
                             {aberto ? (
-                              <div className="mt-1">
+                              <div className="mt-1 min-w-0">
                                 {semanas.map((week) => {
                                   const dataSemana = data ? addDaysUtc(data, week.offset) : null
                                   const iso = dataSemana ? isoAnoSemanaUtc(dataSemana) : null
                                   return (
-                                    <div key={week.id} className="border-t border-line py-2.5 first:border-0">
-                                      <p className="mb-2 text-[12.5px] font-semibold text-ink">
+                                    <div
+                                      key={week.id}
+                                      className="min-w-0 border-t border-line py-2.5 first:border-0"
+                                    >
+                                      <p className="mb-2 break-words text-[12.5px] font-semibold text-ink">
                                         {dataSemana ? formatBrUtc(dataSemana) : `Dia ${week.offset}`}{' '}
-                                        <span className="font-normal text-soil">dia {week.offset}</span>
-                                        {iso ? (
-                                          <span className="font-normal text-soil">
-                                            {' '}
-                                            · {iso.year} · sem. {iso.week}
-                                          </span>
-                                        ) : null}
+                                        <span className="font-normal text-soil">
+                                          dia {week.offset}
+                                          {iso ? ` · ${iso.year} · sem. ${iso.week}` : ''}
+                                        </span>
                                       </p>
-                                      <div className="grid gap-2.5 sm:grid-cols-3">
+                                      <div className="grid min-w-0 gap-2.5">
                                         {week.ops.map((op, opIndex) => {
                                           const chave = `${week.id}-${opIndex}`
                                           return (
@@ -610,7 +625,7 @@ export function CalendarioPage() {
                     )
                   })}
                 </div>
-                <p className="mt-2 text-xs text-soil">
+                <p className="mt-2 break-words text-xs text-soil">
                   Ciclo total: {diasTotais(variedade)} dias, de “{variedade.stages[0]?.name}” até “
                   {ultimaEtapa?.name}”.
                 </p>
@@ -622,7 +637,7 @@ export function CalendarioPage() {
         </Card>
 
         {custos && datas ? (
-          <Card className="space-y-4">
+          <Card className="min-w-0 space-y-4 overflow-hidden">
             <h2 className="font-display text-lg font-semibold text-field">Resumo de custos do ciclo</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               <Metric label="Custo total do ciclo" value={formatCurrency(custos.total)} />
@@ -636,8 +651,24 @@ export function CalendarioPage() {
               </p>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="min-w-[30rem] w-full border-collapse text-left text-sm">
+                <div className="space-y-2 sm:hidden">
+                  {custos.entries.map((item, index) => (
+                    <div
+                      key={`${item.nome}-${item.offset}-${index}`}
+                      className="rounded-leaf border border-line bg-cream px-3 py-2"
+                    >
+                      <p className="break-words text-sm font-semibold text-ink">{item.nome}</p>
+                      <p className="mt-0.5 break-words text-xs text-soil">
+                        {item.etapa} · dia {item.offset}
+                      </p>
+                      <p className="mt-1 text-sm tabular-nums text-field">
+                        {formatCurrency(item.rTotal)} · {formatNumber(item.pct, 1)}%
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto sm:block">
+                  <table className="w-full min-w-[30rem] border-collapse text-left text-sm">
                     <thead>
                       <tr className="text-[11.5px] font-semibold text-soil">
                         <th className="border-b border-line pb-1.5 pr-2 font-semibold">Operação</th>
@@ -755,15 +786,18 @@ function EditorEtapas({
   onChange: (next: EtapaRascunho[]) => void
 }) {
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       {stages.map((etapa, index) => (
         <div
           key={etapa.id}
-          className={cn('grid items-center gap-2', index === 0 ? 'grid-cols-[1fr_auto]' : 'grid-cols-[1fr_4.5rem_auto]')}
+          className={cn(
+            'grid min-w-0 items-center gap-2',
+            index === 0 ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[minmax(0,1fr)_4.5rem_auto]',
+          )}
         >
           <input
             type="text"
-            className="min-h-11 w-full rounded-leaf border-0 bg-cream px-3 text-sm font-medium text-ink outline-none focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)]"
+            className="min-h-11 min-w-0 w-full rounded-leaf border-0 bg-cream px-3 text-sm font-medium text-ink outline-none focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)]"
             placeholder={index === 0 ? 'Nome da 1ª etapa' : 'Nome da etapa'}
             value={etapa.name}
             onChange={(event) =>
@@ -777,7 +811,7 @@ function EditorEtapas({
               type="text"
               inputMode="numeric"
               lang="pt-BR"
-              className="min-h-11 w-full rounded-leaf border-0 bg-cream px-2 text-center text-sm font-medium text-ink outline-none focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)]"
+              className="min-h-11 w-full min-w-0 rounded-leaf border-0 bg-cream px-2 text-center text-sm font-medium text-ink outline-none focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)]"
               placeholder="dias"
               value={etapa.days != null ? String(etapa.days) : ''}
               onChange={(event) =>
@@ -791,7 +825,7 @@ function EditorEtapas({
           ) : null}
           <button
             type="button"
-            className="flex h-11 w-8 items-center justify-center text-lg text-soil"
+            className="flex h-11 w-8 shrink-0 items-center justify-center text-lg text-soil"
             style={{ visibility: stages.length <= 2 ? 'hidden' : 'visible' }}
             title="Remover"
             onClick={() => {
@@ -846,10 +880,10 @@ function OperacaoCard({
   }
 
   return (
-    <div className="rounded-leaf border border-line bg-cream p-2">
+    <div className="min-w-0 overflow-hidden rounded-leaf border border-line bg-cream p-2">
       <input
         list={`sugestoes-op-${idPrefix}`}
-        className="mb-1.5 min-h-11 w-full rounded-leaf border-0 bg-paper px-2 text-[12.5px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-soil/40 focus:shadow-[0_0_0_2px_var(--color-field)]"
+        className="mb-1.5 min-h-11 w-full min-w-0 rounded-leaf border-0 bg-paper px-2 text-[12.5px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-soil/40 focus:shadow-[0_0_0_2px_var(--color-field)]"
         placeholder="Nome da operação"
         value={op.name}
         onChange={(event) => onChange({ ...op, name: event.target.value })}
@@ -868,8 +902,8 @@ function OperacaoCard({
         {laborAberto ? '▾' : '▸'} Mão de obra
       </button>
       {laborAberto ? (
-        <div className="mb-1.5 space-y-1.5">
-          <div className="grid grid-cols-2 gap-1.5">
+        <div className="mb-1.5 min-w-0 space-y-1.5">
+          <div className="grid min-w-0 grid-cols-2 gap-1.5">
             <CampoMini
               label="Nº plantas"
               name={`l-np-${idPrefix}`}
@@ -892,21 +926,21 @@ function OperacaoCard({
               onChange={(value) => patchLabor({ valorDiaria: parseDecimal(value) ?? 0 })}
             />
             <CampoMini
-              label="Prazo desejado (dias)"
+              label="Prazo (dias)"
               name={`l-prazo-${idPrefix}`}
               inputMode="decimal"
               value={numField(op.labor.prazo)}
               onChange={(value) => patchLabor({ prazo: parseDecimal(value) ?? 0 })}
             />
           </div>
-          <div className="rounded-leaf bg-paper px-1.5 py-1.5 text-[11px] leading-snug text-soil">
+          <div className="break-words rounded-leaf bg-paper px-1.5 py-1.5 text-[11px] leading-snug text-soil">
             {labor ? (
               <>
-                Colab. necessários/dia: <strong className="text-ink">{formatNumber(labor.colabNecessarios, 0)}</strong>
+                Colab./dia: <strong className="text-ink">{formatNumber(labor.colabNecessarios, 0)}</strong>
                 <br />
-                Total de diárias: <strong className="text-ink">{formatNumber(labor.totalDiarias, 1)}</strong>
+                Diárias: <strong className="text-ink">{formatNumber(labor.totalDiarias, 1)}</strong>
                 {' · '}
-                Dias efetivos: <strong className="text-ink">{formatNumber(labor.diasEfetivos, 1)}</strong>
+                Dias: <strong className="text-ink">{formatNumber(labor.diasEfetivos, 1)}</strong>
                 <br />
                 R$ total: <strong className="text-ink">{formatCurrency(labor.rTotal)}</strong>
                 {' · '}
@@ -927,45 +961,45 @@ function OperacaoCard({
         {machineAberto ? '▾' : '▸'} Hora máquina
       </button>
       {machineAberto ? (
-        <div className="space-y-1.5">
-          <div className="grid grid-cols-2 gap-1.5">
+        <div className="min-w-0 space-y-1.5">
+          <div className="grid min-w-0 grid-cols-2 gap-1.5">
             <CampoMini
-              label="Área/base de cálculo"
+              label="Área/base"
               name={`m-area-${idPrefix}`}
               inputMode="decimal"
               value={numField(op.machine.areaBase)}
               onChange={(value) => patchMachine({ areaBase: parseDecimal(value) ?? 0 })}
             />
             <CampoMini
-              label="Produtividade (ha/h ou un/h)"
+              label="Prod. (ha/h)"
               name={`m-prod-${idPrefix}`}
               inputMode="decimal"
               value={numField(op.machine.produtividade)}
               onChange={(value) => patchMachine({ produtividade: parseDecimal(value) ?? 0 })}
             />
             <CampoMini
-              label="R$/hora máquina"
+              label="R$/hora"
               name={`m-valor-${idPrefix}`}
               inputMode="decimal"
               value={numField(op.machine.valorHora)}
               onChange={(value) => patchMachine({ valorHora: parseDecimal(value) ?? 0 })}
             />
             <CampoMini
-              label="Prazo desejado (dias)"
+              label="Prazo (dias)"
               name={`m-prazo-${idPrefix}`}
               inputMode="decimal"
               value={numField(op.machine.prazo)}
               onChange={(value) => patchMachine({ prazo: parseDecimal(value) ?? 0 })}
             />
           </div>
-          <div className="rounded-leaf bg-paper px-1.5 py-1.5 text-[11px] leading-snug text-soil">
+          <div className="break-words rounded-leaf bg-paper px-1.5 py-1.5 text-[11px] leading-snug text-soil">
             {maquina ? (
               <>
-                Máquinas necessárias: <strong className="text-ink">{formatNumber(maquina.maquinasNecessarias, 0)}</strong>
+                Máquinas: <strong className="text-ink">{formatNumber(maquina.maquinasNecessarias, 0)}</strong>
                 <br />
-                Total de horas: <strong className="text-ink">{formatNumber(maquina.totalHoras, 1)}</strong>
+                Horas: <strong className="text-ink">{formatNumber(maquina.totalHoras, 1)}</strong>
                 {' · '}
-                Horas efetivas: <strong className="text-ink">{formatNumber(maquina.horasEfetivas, 1)}</strong>
+                Efetivas: <strong className="text-ink">{formatNumber(maquina.horasEfetivas, 1)}</strong>
                 <br />
                 R$ total: <strong className="text-ink">{formatCurrency(maquina.rTotal)}</strong>
                 {' · '}
@@ -981,7 +1015,7 @@ function OperacaoCard({
       ) : null}
 
       {custo.rPlanta > 0 ? (
-        <p className="mt-1.5 text-xs font-bold text-mango">
+        <p className="mt-1.5 break-words text-xs font-bold text-mango">
           Valor/planta: {formatCurrency(custo.rPlanta)}
         </p>
       ) : null}
@@ -1003,14 +1037,14 @@ function CampoMini({
   inputMode?: 'decimal' | 'numeric'
 }) {
   return (
-    <label className="block" htmlFor={name}>
-      <span className="mb-0.5 block text-[10px] text-soil">{label}</span>
+    <label className="block min-w-0" htmlFor={name}>
+      <span className="mb-0.5 block break-words text-[10px] leading-tight text-soil">{label}</span>
       <input
         id={name}
         name={name}
         lang={inputMode ? 'pt-BR' : undefined}
         inputMode={inputMode}
-        className="min-h-10 w-full rounded-leaf border-0 bg-paper px-1.5 text-xs text-ink outline-none focus:shadow-[0_0_0_2px_var(--color-field)]"
+        className="min-h-10 w-full min-w-0 rounded-leaf border-0 bg-paper px-1.5 text-xs text-ink outline-none focus:shadow-[0_0_0_2px_var(--color-field)]"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />

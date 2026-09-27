@@ -8,7 +8,7 @@ const TITLES: Record<string, string> = {
   '/safra': 'Calcular Safra',
   '/regulador': 'Calcular PBZ',
   '/custo-calda': 'Calcular Calda Orgânica',
-  '/calendario': 'Planejar Tratos Culturais',
+  '/calendario': 'Tratos culturais',
   '/meus-dados': 'Meus dados',
 }
 
@@ -27,7 +27,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-paper pt-[max(0.65rem,env(safe-area-inset-top))]">
-      <div className="mx-auto flex w-full max-w-lg items-center gap-3 px-3 py-2 desk:max-w-6xl desk:px-8 desk:py-3.5">
+      <div className="mx-auto flex w-full min-w-0 max-w-lg items-center gap-3 overflow-x-clip px-3 py-2 desk:max-w-6xl desk:px-8 desk:py-3.5">
         {isHome ? (
           <>
             <div className="min-w-0 flex-1 desk:hidden">
@@ -53,7 +53,7 @@ export function Header() {
               </svg>
             </button>
             <div className="min-w-0">
-              <p className="font-display text-lg font-semibold leading-tight text-field desk:text-2xl">
+              <p className="break-words font-display text-lg font-semibold leading-tight text-field desk:text-2xl">
                 {title}
               </p>
               <p className="hidden truncate text-sm text-soil desk:block">{propriedade?.nome}</p>

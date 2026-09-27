@@ -14,7 +14,7 @@ import { Select } from '@/components/ui/Select'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
-import { usePersistedState } from '@/hooks/usePersistedState'
+import { useSessionState } from '@/hooks/useSessionState'
 import {
   diasDoCiclo,
   diasNaoNegativos,
@@ -69,7 +69,7 @@ function variedadeVazia(): VariedadeSafra {
 export function CalcularSafraPage() {
   const { produtor, salvarProdutor } = useApp()
   const { showInterstitial } = useAds()
-  const [form, setForm] = usePersistedState(STORAGE_KEYS.calcularSafra, INITIAL)
+  const [form, setForm] = useSessionState(STORAGE_KEYS.calcularSafra, INITIAL)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<VariedadeSafra | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)

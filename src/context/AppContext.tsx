@@ -17,6 +17,7 @@ import {
   type ConsentimentoLgpd,
   type PacoteTitular,
 } from '@/lib/lgpd'
+import { limparCalculos } from '@/hooks/useSessionState'
 import { readStore, removeStore, writeStore } from '@/storage/localStore'
 import { PRODUTOR_PADRAO, type CicloCultura, type ConfigProdutor, type Propriedade } from '@/types/models'
 
@@ -101,6 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           loggedAt: new Date().toISOString(),
         }
         writeStore(STORAGE_KEYS.propriedade, next)
+        limparCalculos()
         setPropriedade(next)
         setConsentimento(registrarConsentimento())
         setProdutor(
@@ -108,9 +110,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         )
         return next
       },
-      /** Sair tira só nome e telefone; o caderno permanece no aparelho. */
+      /** Sair tira nome, telefone e os cálculos da sessão. */
       logout: () => {
         removeStore(STORAGE_KEYS.propriedade)
+        limparCalculos()
         limparAdSessao()
         setPropriedade(null)
       },
@@ -124,6 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       /** Exclusão LGPD: apaga identidade, caderno e o aceite. */
       apagarMeusDados: () => {
         apagarDadosTitular()
+        limparCalculos()
         limparAdSessao()
         setPropriedade(null)
         setProdutor(PRODUTOR_PADRAO)

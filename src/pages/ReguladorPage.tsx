@@ -12,7 +12,7 @@ import { Metric } from '@/components/ui/Metric'
 import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
-import { usePersistedState } from '@/hooks/usePersistedState'
+import { useSessionState } from '@/hooks/useSessionState'
 import { formatCurrency, formatNumber, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { calcularRegulador, parsePlantas } from '@/lib/regulador'
@@ -85,7 +85,7 @@ const INITIAL: ReguladorState = {
 export function ReguladorPage() {
   const { produtor } = useApp()
   const { showInterstitial } = useAds()
-  const [form, setForm] = usePersistedState(STORAGE_KEYS.regulador, INITIAL)
+  const [form, setForm] = useSessionState(STORAGE_KEYS.regulador, INITIAL)
   const [error, setError] = useState('')
   const resultRef = useRef<HTMLDivElement>(null)
 

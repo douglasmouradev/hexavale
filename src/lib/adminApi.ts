@@ -39,6 +39,27 @@ export interface AdVideo {
   criado_em?: string
 }
 
+export interface LoginRegistro {
+  id: number
+  telefone: string
+  propriedade: string
+  criado_em: string
+}
+
+/** Sem internet o login segue normal; o registro só se perde. */
+export async function registrarLogin(telefone: string, propriedade: string) {
+  try {
+    await fetch('/api/login-historico', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefone, propriedade }),
+      keepalive: true,
+    })
+  } catch {
+    // Ignora falha de rede.
+  }
+}
+
 /** Pedido do vídeo atual — sem telefone, nome ou caderno do produtor. */
 export async function fetchCurrentAd() {
   for (let tentativa = 0; tentativa < 3; tentativa += 1) {

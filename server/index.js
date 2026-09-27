@@ -1,6 +1,6 @@
 /**
- * API HexaVale: login do admin, vídeos de propaganda e healthcheck.
- * Não recebe caderno, telefone nem nome do produtor.
+ * API HexaVale: login do admin, vídeos de propaganda, histórico de login e healthcheck.
+ * Do produtor recebe só telefone, propriedade e horário de cada login — nunca o caderno.
  * `npm start` (--app) entrega também a pasta dist (PWA + API no mesmo endereço).
  */
 import cors from 'cors'
@@ -26,6 +26,7 @@ const serveApp = process.argv.includes('--app')
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || (serveApp ? '0.0.0.0' : '127.0.0.1')
 const TOKEN_HOURS = 12
+const RETENCAO_LOGIN_MESES = 12
 
 const JWT_EXEMPLO = new Set(['', 'hexa-manga-dev', 'troque-esta-chave-hexa-manga'])
 const SENHA_EXEMPLO = new Set(['', 'HexaAdmin123'])
@@ -164,6 +165,20 @@ async function ensureSchema() {
       KEY idx_ad_videos_ativo (ativo, atualizado_em)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS login_historico (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      telefone VARCHAR(11) NOT NULL,
+      propriedade VARCHAR(120) NOT NULL,
+      criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_login_historico_criado (criado_em),
+      KEY idx_login_historico_telefone (telefone)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `)
+  await pool.query(
+    `DELETE FROM login_historico WHERE criado_em < NOW() - INTERVAL ${RETENCAO_LOGIN_MESES} MONTH`,
+  )
 
   const nome = process.env.ADMIN_NOME || 'Administrador'
   const email = (process.env.ADMIN_EMAIL || 'admin@hexamanga.local').toLowerCase()
@@ -221,6 +236,7 @@ async function ensureSchema() {
 
 const app = express()
 app.disable('x-powered-by')
+app.set('trust proxy', 'loopback')
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-Frame-Options', 'DENY')
@@ -315,6 +331,52 @@ app.get('/api/ads/atual', async (_req, res) => {
     titulo: video.titulo,
     url: `/uploads/videos/${video.arquivo}`,
   })
+})
+
+const registrosLoginPorIp = new Map()
+const JANELA_REGISTRO_MS = 60 * 1000
+const MAX_REGISTROS_POR_IP = 10
+
+function registrosRecentes(ip) {
+  const agora = Date.now()
+  const lista = (registrosLoginPorIp.get(ip) || []).filter((t) => agora - t < JANELA_REGISTRO_MS)
+  registrosLoginPorIp.set(ip, lista)
+  return lista
+}
+
+/** O app chama a cada login do produtor; sem aceite da política o login nem acontece. */
+app.post('/api/login-historico', async (req, res) => {
+  const ip = req.ip || 'desconhecido'
+  if (registrosRecentes(ip).length >= MAX_REGISTROS_POR_IP) {
+    res.status(429).json({ error: 'Muitos registros seguidos.' })
+    return
+  }
+  const telefone = String(req.body?.telefone || '').replace(/\D/g, '')
+  const propriedade = String(req.body?.propriedade || '').trim().slice(0, 120)
+  if (telefone.length < 10 || telefone.length > 11 || propriedade.length < 2) {
+    res.status(400).json({ error: 'Telefone ou propriedade inválidos.' })
+    return
+  }
+  registrosRecentes(ip).push(Date.now())
+  await pool.query('INSERT INTO login_historico (telefone, propriedade) VALUES (?, ?)', [
+    telefone,
+    propriedade,
+  ])
+  res.status(201).json({ ok: true })
+})
+
+app.get('/api/admin/logins', authAdmin, async (req, res) => {
+  const busca = String(req.query.telefone || '').replace(/\D/g, '')
+  const [rows] = busca
+    ? await pool.query(
+        'SELECT id, telefone, propriedade, criado_em FROM login_historico WHERE telefone LIKE ? ORDER BY criado_em DESC LIMIT 500',
+        [`%${busca}%`],
+      )
+    : await pool.query(
+        'SELECT id, telefone, propriedade, criado_em FROM login_historico ORDER BY criado_em DESC LIMIT 500',
+      )
+  res.set('Cache-Control', 'no-store')
+  res.json(rows)
 })
 
 app.get('/api/admin/videos', authAdmin, async (_req, res) => {

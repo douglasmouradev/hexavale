@@ -9,6 +9,7 @@ import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { formatPhone, isValidPhone } from '@/lib/format'
 import { marcarAdSessao } from '@/lib/ads'
+import { registrarLogin } from '@/lib/adminApi'
 
 export function LoginPage() {
   const { propriedade, login } = useApp()
@@ -53,6 +54,7 @@ export function LoginPage() {
       // Segue mesmo se o anúncio não abrir.
     }
     login({ telefone, nome })
+    void registrarLogin(telefone, nome.trim())
     navigate('/', { replace: true })
   }
 
@@ -66,7 +68,7 @@ export function LoginPage() {
           neste celular
         </>
       }
-      subtitle="Safra, PBZ, calda orgânica e tratos. Os dados ficam só neste aparelho."
+      subtitle="Safra, PBZ, calda orgânica e tratos. O caderno fica só neste aparelho."
       footer={
         <p className="text-center text-[13px] font-semibold tracking-[0.04em] text-soil/70">
           <Link to="/admin/login" className="text-field">

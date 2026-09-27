@@ -30,6 +30,11 @@ const AdminVideosPage = lazy(() =>
     default: module.AdminVideosPage,
   })),
 )
+const AdminLoginsPage = lazy(() =>
+  import('@/pages/admin/AdminLoginsPage').then((module) => ({
+    default: module.AdminLoginsPage,
+  })),
+)
 const DashboardPage = lazy(() =>
   import('@/pages/DashboardPage').then((module) => ({
     default: module.DashboardPage,
@@ -84,6 +89,7 @@ export default function App() {
               <Route path="/admin/login" element={<AdminLoginPage />} />
               <Route path="/admin" element={<AdminProtectedRoute />}>
                 <Route index element={<AdminVideosPage />} />
+                <Route path="logins" element={<AdminLoginsPage />} />
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>

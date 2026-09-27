@@ -231,8 +231,8 @@ export function DateField({
   )
 
   return (
-    <div ref={rootRef} className="relative block space-y-1.5">
-      <span className="text-[13px] font-semibold tracking-[0.02em] text-soil">
+    <div ref={rootRef} className="relative block min-w-0 space-y-1.5">
+      <span className="break-words text-[13px] font-semibold tracking-[0.02em] text-soil">
         {label}
       </span>
       <button
@@ -242,7 +242,7 @@ export function DateField({
         aria-haspopup="dialog"
         aria-expanded={aberto}
         onClick={() => setAberto((atual) => !atual)}
-        className="flex min-h-14 w-full items-center rounded-leaf border-0 bg-cream px-3.5 text-left text-[17px] font-medium text-ink outline-none focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)] lg:min-h-12 lg:text-base"
+        className="flex min-h-14 w-full min-w-0 items-center rounded-leaf border-0 bg-cream px-3.5 text-left text-[17px] font-medium text-ink outline-none focus:bg-paper focus:shadow-[0_0_0_2px_var(--color-field)] lg:min-h-12 lg:text-base"
       >
         {value ? formatarDataBr(value) : <span className="text-soil/30">dd/mm/aaaa</span>}
       </button>

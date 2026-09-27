@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input'
 import { Metric } from '@/components/ui/Metric'
 import { useAds } from '@/context/AdContext'
 import { STORAGE_KEYS } from '@/data/constants'
-import { usePersistedState } from '@/hooks/usePersistedState'
+import { useSessionState } from '@/hooks/useSessionState'
 import type { CaldaFormState } from '@/hooks/useCaldaForm'
 import {
   calcularCustoCalda,
@@ -69,7 +69,7 @@ function totalInsumo(item: InsumoForm) {
 
 export function CustoCaldaPage() {
   const { showInterstitial } = useAds()
-  const [form, setForm] = usePersistedState(STORAGE_KEYS.custoCalda, INITIAL)
+  const [form, setForm] = useSessionState(STORAGE_KEYS.custoCalda, INITIAL)
   const [error, setError] = useState('')
   const [etapa, setEtapa] = useState<1 | 2 | 3>(form.resultado ? 3 : 1)
   const resultRef = useRef<HTMLDivElement>(null)

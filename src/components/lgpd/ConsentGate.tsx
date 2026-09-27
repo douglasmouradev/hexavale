@@ -27,8 +27,9 @@ export function ConsentGate() {
           Antes de continuar
         </h2>
         <p className="text-sm leading-relaxed text-soil">
-          Telefone, propriedade e caderno ficam neste aparelho. Para seguir, aceite a política
-          (versão {POLITICA_VERSAO}).
+          O caderno fica neste aparelho. A cada login, telefone, propriedade, dia e horário vão
+          para o histórico de acessos do HexaVale. Para seguir, aceite a política (versão{' '}
+          {POLITICA_VERSAO}).
         </p>
         <label className="flex items-start gap-3 border border-line px-3 py-3">
           <input

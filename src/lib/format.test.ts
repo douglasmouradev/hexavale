@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { formatCurrency, formatDiaPorExtenso, parseDecimal } from '@/lib/format'
+import { formatCurrency, formatDiaPorExtenso, formatMilhar, parseDecimal } from '@/lib/format'
+
+describe('formatMilhar', () => {
+  it('põe ponto de milhar e volta a ler o mesmo número', () => {
+    expect(formatMilhar('1000')).toBe('1.000')
+    expect(formatMilhar('1.0000')).toBe('10.000')
+    expect(formatMilhar('1234567')).toBe('1.234.567')
+    expect(formatMilhar('500')).toBe('500')
+    expect(formatMilhar('')).toBe('')
+    expect(parseDecimal(formatMilhar('10000'))).toBe(10000)
+  })
+})
 
 describe('parseDecimal', () => {
   it('lê vírgula decimal e ponto de milhar', () => {

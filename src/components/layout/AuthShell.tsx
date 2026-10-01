@@ -46,7 +46,7 @@ export function AuthShell({
           ) : null}
         </div>
         <p className="text-[13px] font-semibold tracking-[0.12em] text-white/40">
-          Hexavale
+          HexaVale | Gestão que acontece no campo
         </p>
       </aside>
 

@@ -1,6 +1,6 @@
 /**
- * Calcular safra: uma data de colheita e as quatro fases da mangueira.
- * Cada data da linha do tempo traz a ação daquela fase.
+ * Calcular safra: uma data de colheita e as quatro fases da mangueira,
+ * contadas para trás até a poda.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -32,27 +32,11 @@ interface SafraState {
   selecionadaId: string
 }
 
-const INTERVALOS: { key: keyof Pick<VariedadeSafra, 'poda' | 'vegetativo' | 'inducao' | 'floracao'>; label: string; hint: string }[] = [
-  {
-    key: 'poda',
-    label: 'Poda → nova estrutura (dias)',
-    hint: 'Da poda até a planta formar ramos e folhas novos.',
-  },
-  {
-    key: 'vegetativo',
-    label: 'Desenvolvimento vegetativo (dias)',
-    hint: 'Para os ramos madurecerem e ganharem reserva.',
-  },
-  {
-    key: 'inducao',
-    label: 'Indução floral (dias)',
-    hint: 'A planta passa da folha para a flor.',
-  },
-  {
-    key: 'floracao',
-    label: 'Floração → colheita (dias)',
-    hint: 'Da flor até a maturação e a colheita.',
-  },
+const INTERVALOS: { key: keyof Pick<VariedadeSafra, 'poda' | 'vegetativo' | 'inducao' | 'floracao'>; label: string }[] = [
+  { key: 'poda', label: 'Poda → Regulador de Crescimento (dias)' },
+  { key: 'vegetativo', label: 'Regulador → Indução floral (dias)' },
+  { key: 'inducao', label: 'Indução floral → Florescimento (dias)' },
+  { key: 'floracao', label: 'Florescimento → Colheita (dias)' },
 ]
 
 function estadoInicial(): SafraState {
@@ -168,12 +152,9 @@ export function CalcularSafraPage() {
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(16rem,19rem)_minmax(0,1fr)]">
       <Card className="space-y-3">
-        <div>
-          <h2 className="font-display text-lg font-semibold text-field">Variedades</h2>
-          <p className="mt-1 text-sm text-soil">
-            Os quatro intervalos mudam por variedade. A Palmer de exemplo usa 60, 90, 30 e 140 dias.
-          </p>
-        </div>
+        <h2 className="font-display text-lg font-semibold text-field">
+          Planejamento das Fases do Ciclo Produtivo
+        </h2>
 
         {form.variedades.map((item) => {
           const editando = editingId === item.id && editDraft?.id === item.id
@@ -217,8 +198,8 @@ export function CalcularSafraPage() {
                 <p className="shrink-0 text-xs text-soil">{diasDoCiclo(item)} dias no ciclo</p>
               </div>
               <p className="mt-1 text-xs leading-snug text-soil">
-                Poda {item.poda} · Vegetativo {item.vegetativo} · Indução {item.inducao} · Floração{' '}
-                {item.floracao}
+                Poda {item.poda} · Regulador {item.vegetativo} · Indução {item.inducao} ·
+                Florescimento {item.floracao}
               </p>
               <div className="mt-2 flex gap-4">
                 <button
@@ -287,8 +268,8 @@ export function CalcularSafraPage() {
         <div>
           <h2 className="font-display text-lg font-semibold text-field">Calculadora</h2>
           <p className="mt-1 text-sm text-soil">
-            Tudo parte da data desejada da colheita. O calendário conta os dias para trás e mostra,
-            em cada data, a ação do ciclo.
+            Tudo parte da data desejada da colheita. O calendário conta os dias para trás e mostra
+            a data de cada fase do ciclo.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
@@ -346,7 +327,6 @@ export function CalcularSafraPage() {
                     {marco.dias !== null ? (
                       <p className="text-xs text-soil">{marco.dias} dias após a etapa anterior</p>
                     ) : null}
-                    <p className="mt-1 text-sm leading-snug text-ink">{marco.acao}</p>
                   </div>
                 ))}
               </div>
@@ -355,7 +335,7 @@ export function CalcularSafraPage() {
               </p>
             </>
           ) : (
-            <Banner>Escolha a data desejada da colheita para ver as datas e as ações.</Banner>
+            <Banner>Escolha a data desejada da colheita para ver as datas de cada fase.</Banner>
           )}
         </div>
 
@@ -377,12 +357,11 @@ function Intervalos({
   onChange: (next: VariedadeSafra) => void
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 items-end gap-2">
       {INTERVALOS.map((intervalo) => (
         <Input
           key={intervalo.key}
           label={intervalo.label}
-          hint={intervalo.hint}
           name={`${prefix}-${intervalo.key}`}
           inputMode="numeric"
           value={String(variedade[intervalo.key])}

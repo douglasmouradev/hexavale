@@ -13,10 +13,10 @@ describe('marcosDaColheita', () => {
     const marcos = marcosDaColheita(palmer, '2027-08-18')
 
     expect(marcos.map((marco) => marco.nome)).toEqual([
-      'Poda',
-      'Desenvolvimento vegetativo',
-      'Indução floral',
-      'Floração',
+      'Poda → Regulador de Crescimento',
+      'Regulador → Indução floral',
+      'Indução floral → Florescimento',
+      'Florescimento → Colheita',
       'Colheita',
     ])
     expect(marcos.map((marco) => formatBrUtc(marco.data))).toEqual([
@@ -27,7 +27,6 @@ describe('marcosDaColheita', () => {
       '18/08/2027',
     ])
     expect(marcos.map((marco) => marco.dias)).toEqual([null, 60, 90, 30, 140])
-    expect(marcos.every((marco) => marco.acao.length > 0)).toBe(true)
     expect(marcos[4]?.alvo).toBe(true)
     expect(diasDoCiclo(palmer)).toBe(320)
   })

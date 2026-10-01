@@ -76,6 +76,12 @@ export function parseDecimal(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/** Campo inteiro com ponto de milhar enquanto digita: 10000 → 10.000. */
+export function formatMilhar(value: string): string {
+  const digits = value.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
 const MESES_CURTOS = [
   'jan',
   'fev',

@@ -65,10 +65,10 @@ export function LoginPage() {
         <>
           A safra
           <br />
-          neste celular
+          na palma da mão
         </>
       }
-      subtitle="Safra, PBZ, calda orgânica e tratos. O caderno fica só neste aparelho."
+      subtitle="Safra, reguladores de crescimento, caldas, tratos culturais e muito mais."
       footer={
         <p className="text-center text-[13px] font-semibold tracking-[0.04em] text-soil/70">
           <Link to="/admin/login" className="text-field">

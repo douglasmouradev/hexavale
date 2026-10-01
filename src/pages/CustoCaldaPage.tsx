@@ -1,4 +1,4 @@
-/** Custo da calda em kg e R$: tanque, litro e hectare, em 3 etapas. */
+/** Custo da calda em Kg/L e R$: tanque, litro e hectare, em 3 etapas. */
 import { useRef, useState, type FormEvent } from 'react'
 import { Plus } from 'lucide-react'
 import { PageSplit } from '@/components/layout/PageSplit'
@@ -18,7 +18,7 @@ import {
   parseCustoCaldaCampos,
   type ResultadoCustoCalda,
 } from '@/lib/custoCalda'
-import { formatCurrency, formatNumber, parseDecimal } from '@/lib/format'
+import { formatCurrency, formatMilhar, formatNumber, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { readStore } from '@/storage/localStore'
 
@@ -105,7 +105,7 @@ export function CustoCaldaPage() {
     }
 
     if (insumos.length === 0) {
-      setError('Lance pelo menos um insumo em kg.')
+      setError('Lance pelo menos um insumo.')
       setForm((current) => ({ ...current, resultado: null }))
       setEtapa(2)
       return
@@ -167,7 +167,7 @@ export function CustoCaldaPage() {
     .map((item) => ({
       label: item.nome.trim(),
       value: totalInsumo(item),
-      detalhe: `${formatNumber(parseDecimal(item.qtd) ?? 0)} kg`,
+      detalhe: `${formatNumber(parseDecimal(item.qtd) ?? 0)} Kg/L`,
     }))
     .filter((fatia) => fatia.label && fatia.value > 0)
 
@@ -193,7 +193,7 @@ export function CustoCaldaPage() {
         <Metric
           label="Custo total dos insumos"
           value={formatCurrency(resultado.totalValor)}
-          hint={`${formatNumber(resultado.totalQtd, 1)} kg de insumos no tanque`}
+          hint={`${formatNumber(resultado.totalQtd, 1)} Kg/L de insumos no tanque`}
         />
         <Metric
           label="Valor do litro da calda"
@@ -218,7 +218,7 @@ export function CustoCaldaPage() {
           <Metric
             label="Maior volume utilizado"
             value={resultado.maiorVolume.nome}
-            hint={`${formatNumber(resultado.maiorVolume.qtd)} kg`}
+            hint={`${formatNumber(resultado.maiorVolume.qtd)} Kg/L`}
           />
         ) : null}
       </Card>
@@ -228,8 +228,8 @@ export function CustoCaldaPage() {
             Distribuição do volume de insumos
           </p>
           <GraficoPizza
-            centro={`${formatNumber(resultado.totalQtd, 1)} kg`}
-            formatValor={(value) => `${formatNumber(value)} kg`}
+            centro={`${formatNumber(resultado.totalQtd, 1)} Kg/L`}
+            formatValor={(value) => `${formatNumber(value)} Kg/L`}
             rotuloParte="do volume"
             fatias={fatiasVolume}
           />
@@ -258,10 +258,10 @@ export function CustoCaldaPage() {
       <PageSplit aside={etapa === 3 ? resultadoCard : null}>
         {etapa === 1 ? (
           <Card className="space-y-3">
-            <p className="text-sm text-soil">Etapa 1 de 3 · Tanque e aplicação</p>
+            <p className="text-sm text-soil">Etapa 1 de 3 · Parâmetros de aplicação</p>
             <p className="text-sm text-soil">
-              Aqui o custo entra em kg e R$/kg, como na planilha da calda orgânica. A tela Calda
-              monta a dose (ml/L, g/L); esta calcula o valor do tanque e da operação no ciclo.
+              Informe os dados utilizados para calcular o volume de calda e o custo das aplicações
+              no ciclo.
             </p>
             <Button
               type="button"
@@ -288,21 +288,21 @@ export function CustoCaldaPage() {
               </Button>
             ) : null}
             <Input
-              label="Volume do tanque (L)"
+              label="Capacidade do tanque (L)"
               name="tankVolume"
-              inputMode="decimal"
-              value={form.tankVolume}
-              onChange={(event) => setForm({ ...form, tankVolume: event.target.value })}
+              inputMode="numeric"
+              value={formatMilhar(form.tankVolume)}
+              onChange={(event) => setForm({ ...form, tankVolume: formatMilhar(event.target.value) })}
             />
             <Input
-              label="Volume aplicado por hectare (L)"
+              label="Volume de aplicação (L/ha)"
               name="volPerHa"
-              inputMode="decimal"
-              value={form.volPerHa}
-              onChange={(event) => setForm({ ...form, volPerHa: event.target.value })}
+              inputMode="numeric"
+              value={formatMilhar(form.volPerHa)}
+              onChange={(event) => setForm({ ...form, volPerHa: formatMilhar(event.target.value) })}
             />
             <Input
-              label="Nº de aplicações no ciclo"
+              label="Número de aplicações no ciclo"
               name="numApps"
               inputMode="numeric"
               value={form.numApps}
@@ -328,9 +328,9 @@ export function CustoCaldaPage() {
               className="text-sm font-semibold text-field"
               onClick={() => setEtapa(1)}
             >
-              ← Tanque e aplicação
+              ← Parâmetros de aplicação
             </button>
-            <p className="text-sm text-soil">Etapa 2 de 3 · Receita do tanque</p>
+            <p className="text-sm text-soil">Etapa 2 de 3 · Composição da calda</p>
             {form.insumos.map((item) => (
               <Card key={item.id} className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
@@ -354,7 +354,7 @@ export function CustoCaldaPage() {
                   </button>
                 </div>
                 <Input
-                  label="Nome"
+                  label="Insumo"
                   name={`nome-${item.id}`}
                   placeholder="Nome do insumo"
                   value={item.nome}
@@ -369,7 +369,7 @@ export function CustoCaldaPage() {
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    label="Qtd. (kg)"
+                    label="Qtd. (Kg/L)"
                     name={`qtd-${item.id}`}
                     inputMode="decimal"
                     value={item.qtd}
@@ -421,7 +421,7 @@ export function CustoCaldaPage() {
                   Total da receita
                 </span>
                 <span className="shrink-0 text-right font-display text-lg font-semibold tabular-nums text-field">
-                  {formatNumber(totalKgPreview, 1)} kg
+                  {formatNumber(totalKgPreview, 1)} Kg/L
                   <span className="mt-0.5 block text-sm font-medium">
                     {formatCurrency(totalRsPreview)}
                   </span>

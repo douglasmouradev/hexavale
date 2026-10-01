@@ -13,7 +13,7 @@ import { useAds } from '@/context/AdContext'
 import { useApp } from '@/context/AppContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { useSessionState } from '@/hooks/useSessionState'
-import { formatCurrency, formatNumber, parseDecimal } from '@/lib/format'
+import { formatCurrency, formatMilhar, formatNumber, parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { calcularRegulador, parsePlantas } from '@/lib/regulador'
 
@@ -186,9 +186,7 @@ export function ReguladorPage() {
       >
       <Card className="space-y-3">
         <h2 className="text-lg font-bold text-ink">Talhão</h2>
-        <p className="text-sm text-soil">
-          Dose em mL por planta. O volume sai em litros: (mL × plantas) / 1000.
-        </p>
+        <p className="text-sm text-soil">Levantamento de Necessidade – PBZ</p>
         <Button
           type="button"
           variant="ghost"
@@ -212,25 +210,25 @@ export function ReguladorPage() {
           onChange={(event) => setForm({ ...form, areaHa: event.target.value })}
         />
         <Input
-          label="Plantas maiores"
+          label="Plantas de maior porte"
           name="plantasMaior"
           inputMode="numeric"
-          value={form.plantasMaior}
-          onChange={(event) => setForm({ ...form, plantasMaior: event.target.value })}
+          value={formatMilhar(form.plantasMaior)}
+          onChange={(event) => setForm({ ...form, plantasMaior: formatMilhar(event.target.value) })}
         />
         <Input
-          label="Plantas médias"
+          label="Plantas de médio porte"
           name="plantasMedia"
           inputMode="numeric"
-          value={form.plantasMedia}
-          onChange={(event) => setForm({ ...form, plantasMedia: event.target.value })}
+          value={formatMilhar(form.plantasMedia)}
+          onChange={(event) => setForm({ ...form, plantasMedia: formatMilhar(event.target.value) })}
         />
         <Input
-          label="Plantas menores"
+          label="Plantas de menor porte"
           name="plantasMenor"
           inputMode="numeric"
-          value={form.plantasMenor}
-          onChange={(event) => setForm({ ...form, plantasMenor: event.target.value })}
+          value={formatMilhar(form.plantasMenor)}
+          onChange={(event) => setForm({ ...form, plantasMenor: formatMilhar(event.target.value) })}
         />
         </div>
       </Card>
@@ -268,9 +266,9 @@ export function ReguladorPage() {
               })
             }
           />
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 items-end gap-2">
             <Input
-              label="mL maior"
+              label="Plantas de maior porte (mL)"
               name={`maior-${item.id}`}
               inputMode="decimal"
               value={item.dosMaior}
@@ -284,7 +282,7 @@ export function ReguladorPage() {
               }
             />
             <Input
-              label="mL média"
+              label="Plantas de médio porte (mL)"
               name={`media-${item.id}`}
               inputMode="decimal"
               value={item.dosMedia}
@@ -298,7 +296,7 @@ export function ReguladorPage() {
               }
             />
             <Input
-              label="mL menor"
+              label="Plantas de menor porte (mL)"
               name={`menor-${item.id}`}
               inputMode="decimal"
               value={item.dosMenor}
@@ -313,7 +311,7 @@ export function ReguladorPage() {
             />
           </div>
           <Input
-            label="R$ / litro"
+            label="R$ / Kg ou L"
             name={`vu-${item.id}`}
             inputMode="decimal"
             value={item.valorUnit}

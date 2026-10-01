@@ -1,6 +1,6 @@
 /**
  * Calcular safra: quatro intervalos da mangueira, contados para trás
- * a partir da data de colheita. Cada data pede uma ação.
+ * a partir da data de colheita.
  */
 import { addDaysUtc, parseIsoUtc } from '@/lib/calendarioManga'
 import { createId } from '@/lib/id'
@@ -8,13 +8,13 @@ import { createId } from '@/lib/id'
 export interface VariedadeSafra {
   id: string
   name: string
-  /** Dias da poda até a nova estrutura vegetativa. */
+  /** Dias da poda até o regulador de crescimento. */
   poda: number
-  /** Dias para os ramos novos madurecerem e ganharem reserva. */
+  /** Dias do regulador até a indução floral. */
   vegetativo: number
-  /** Dias da indução até a flor abrir. */
+  /** Dias da indução até o florescimento. */
   inducao: number
-  /** Dias da floração até a maturação e a colheita. */
+  /** Dias do florescimento até a colheita. */
   floracao: number
 }
 
@@ -23,7 +23,6 @@ export interface MarcoSafra {
   data: Date
   /** Dias desde a etapa anterior. A poda é o começo. */
   dias: number | null
-  acao: string
   alvo: boolean
 }
 
@@ -47,7 +46,7 @@ export function diasNaoNegativos(value: number) {
   return Math.max(0, Math.round(value))
 }
 
-/** Da colheita para trás: floração, indução, estrutura nova e poda. */
+/** Da colheita para trás: florescimento, indução, regulador e poda. */
 export function marcosDaColheita(variedade: VariedadeSafra, colheitaIso: string): MarcoSafra[] {
   const colheita = parseIsoUtc(colheitaIso)
   const floracao = addDaysUtc(colheita, -variedade.floracao)
@@ -56,40 +55,10 @@ export function marcosDaColheita(variedade: VariedadeSafra, colheitaIso: string)
   const poda = addDaysUtc(vegetativo, -variedade.poda)
 
   return [
-    {
-      nome: 'Poda',
-      data: poda,
-      dias: null,
-      acao: 'Podar para estimular uma nova brotação.',
-      alvo: false,
-    },
-    {
-      nome: 'Desenvolvimento vegetativo',
-      data: vegetativo,
-      dias: variedade.poda,
-      acao: 'A planta apresenta a nova estrutura, com ramos novos e folhas. Esses ramos precisam madurecer e ganhar reserva para florir.',
-      alvo: false,
-    },
-    {
-      nome: 'Indução floral',
-      data: inducao,
-      dias: variedade.vegetativo,
-      acao: 'Induzir a floração para a planta sair da fase vegetativa e entrar na reprodutiva.',
-      alvo: false,
-    },
-    {
-      nome: 'Floração',
-      data: floracao,
-      dias: variedade.inducao,
-      acao: 'As folhas dão lugar à flor. Acompanhar a emissão, o pegamento e o desenvolvimento dos frutos.',
-      alvo: false,
-    },
-    {
-      nome: 'Colheita',
-      data: colheita,
-      dias: variedade.floracao,
-      acao: 'Maturação e colheita.',
-      alvo: true,
-    },
+    { nome: 'Poda → Regulador de Crescimento', data: poda, dias: null, alvo: false },
+    { nome: 'Regulador → Indução floral', data: vegetativo, dias: variedade.poda, alvo: false },
+    { nome: 'Indução floral → Florescimento', data: inducao, dias: variedade.vegetativo, alvo: false },
+    { nome: 'Florescimento → Colheita', data: floracao, dias: variedade.inducao, alvo: false },
+    { nome: 'Colheita', data: colheita, dias: variedade.floracao, alvo: true },
   ]
 }

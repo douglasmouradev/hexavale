@@ -82,29 +82,6 @@ export function formatMilhar(value: string): string {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-const MESES_CURTOS = [
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-]
-
-/** 15/12/2026 → 15 de dez 2026, sem puxar date-fns. */
-export function formatDiaPorExtenso(iso: string) {
-  const [ano, mes, dia] = iso.split('-')
-  const nomeMes = MESES_CURTOS[Number(mes) - 1]
-  if (!ano || !dia || !nomeMes) return iso
-  return `${dia} de ${nomeMes} ${ano}`
-}
-
 export function formatNumber(value: number, digits = 2): string {
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 0,

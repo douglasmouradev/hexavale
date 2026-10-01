@@ -5,8 +5,6 @@
 import { parseDecimal } from '@/lib/format'
 import { createId } from '@/lib/id'
 
-export type ModoOperacao = 'manual' | 'mecanizado' | 'ambos'
-
 export interface TalhaoCalendario {
   nome: string
   nPlantas: number
@@ -256,18 +254,6 @@ export function custoDaOperacao(
   const rTotal = (labor?.rTotal ?? 0) + (maquina?.rTotal ?? 0)
   const rPlanta = (labor?.rPlanta ?? 0) + (maquina?.rPlanta ?? 0)
   return { labor, maquina, rTotal, rPlanta }
-}
-
-const NOME_MECANIZADO = /meca|roçag|rocag|turbo|atomiz|herbic/
-
-export function modoOperacao(op: OperacaoSemana): ModoOperacao | null {
-  const temMao = op.labor.prod > 0 && op.labor.prazo > 0
-  const temMaquina = op.machine.produtividade > 0 && op.machine.prazo > 0
-  if (temMao && !temMaquina) return 'manual'
-  if (temMaquina && !temMao) return 'mecanizado'
-  if (temMao && temMaquina) return 'ambos'
-  if (!op.name.trim()) return null
-  return NOME_MECANIZADO.test(op.name.toLocaleLowerCase('pt-BR')) ? 'mecanizado' : 'manual'
 }
 
 export function talhaoDoProdutor(

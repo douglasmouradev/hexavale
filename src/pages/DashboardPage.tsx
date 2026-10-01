@@ -1,13 +1,11 @@
 /** Home: as quatro calculadoras da mangueira. */
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ModuleIcon } from '@/components/layout/ModuleIcon'
 import { InstalarAppCard } from '@/components/pwa/InstalarAppCard'
-import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useApp } from '@/context/AppContext'
 import { modulesVisiveis } from '@/data/modules'
-import { lancarItensDeTeste } from '@/lib/amostra'
 
 function saudacao() {
   const hora = new Date().getHours()
@@ -23,7 +21,6 @@ function inicial(nome: string) {
 
 export function DashboardPage() {
   const { propriedade, produtor, salvarProdutor } = useApp()
-  const [, setCadernoTick] = useState(0)
   const visiveis = modulesVisiveis()
   const nomeDestaque = produtor.nomeResponsavel || propriedade?.nome || 'Produtor'
   const subtitulo = [produtor.nomeResponsavel ? propriedade?.nome : null, produtor.municipio]
@@ -36,11 +33,6 @@ export function DashboardPage() {
     // Só quando a cultura ainda não é manga.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produtor.cultura])
-
-  function aplicarTeste() {
-    salvarProdutor(lancarItensDeTeste({ ...produtor, cultura: 'manga' }))
-    setCadernoTick((atual) => atual + 1)
-  }
 
   return (
     <div className="space-y-5">
@@ -107,12 +99,6 @@ export function DashboardPage() {
           </Link>
         </div>
       </div>
-
-      {import.meta.env.DEV ? (
-        <Button variant="outline" full onClick={aplicarTeste}>
-          Lançar itens de teste
-        </Button>
-      ) : null}
 
       <Link to="/meus-dados" className="block desk:hidden">
         <Card>

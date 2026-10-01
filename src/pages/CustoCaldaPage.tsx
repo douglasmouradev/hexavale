@@ -12,7 +12,6 @@ import { Metric } from '@/components/ui/Metric'
 import { useAds } from '@/context/AdContext'
 import { STORAGE_KEYS } from '@/data/constants'
 import { useSessionState } from '@/hooks/useSessionState'
-import type { CaldaFormState } from '@/hooks/useCaldaForm'
 import {
   calcularCustoCalda,
   parseCustoCaldaCampos,
@@ -130,7 +129,7 @@ export function CustoCaldaPage() {
   }
 
   const resultado = form.resultado
-  const calda = readStore<CaldaFormState>(STORAGE_KEYS.calda)
+  const calda = readStore<{ tanqueLitros?: string; litrosPorHectare?: string }>(STORAGE_KEYS.calda)
   const tanqueCalda = calda?.tanqueLitros?.trim() || ''
   const lhaCalda = calda?.litrosPorHectare?.trim() || ''
   const podeCopiarTanque = Boolean(tanqueCalda || lhaCalda)

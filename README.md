@@ -75,4 +75,4 @@ npm run demo
 
 Abra http://localhost:4173 (B) ou http://localhost:3001 (A) no Chrome. No computador isso já permite **Instalar Hexavale**. No iPhone, use o Safari: Compartilhar → Adicionar à Tela de Início.
 
-O botão **Lançar itens de teste** só aparece no `npm run dev`.
+O `npm start` escuta só em `127.0.0.1` (o túnel entra por ali). Para abrir na rede local, rode com `HOST=0.0.0.0`.

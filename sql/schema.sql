@@ -26,3 +26,13 @@ CREATE TABLE IF NOT EXISTS ad_videos (
   PRIMARY KEY (id),
   KEY idx_ad_videos_ativo (ativo, atualizado_em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS login_historico (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  telefone VARCHAR(11) NOT NULL,
+  propriedade VARCHAR(120) NOT NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_login_historico_criado (criado_em),
+  KEY idx_login_historico_telefone (telefone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -24,7 +24,8 @@ fs.mkdirSync(uploadsDir, { recursive: true })
 /** Um processo só: HTML do PWA + /api + /uploads. */
 const serveApp = process.argv.includes('--app')
 const PORT = Number(process.env.PORT || 3001)
-const HOST = process.env.HOST || (serveApp ? '0.0.0.0' : '127.0.0.1')
+/** Só o próprio aparelho: o túnel (Tailscale/Cloudflare) entra por 127.0.0.1. Use HOST=0.0.0.0 para abrir na rede. */
+const HOST = process.env.HOST || '127.0.0.1'
 const TOKEN_HOURS = 12
 const RETENCAO_LOGIN_MESES = 12
 
@@ -237,11 +238,31 @@ async function ensureSchema() {
 const app = express()
 app.disable('x-powered-by')
 app.set('trust proxy', 'loopback')
-app.use((_req, res, next) => {
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "media-src 'self' blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "worker-src 'self'",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
+app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-Frame-Options', 'DENY')
   res.setHeader('Referrer-Policy', 'same-origin')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
+  if (serveApp) res.setHeader('Content-Security-Policy', CSP)
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=15552000')
   next()
 })
 if (!serveApp) {
@@ -269,41 +290,70 @@ app.get('/api/health', async (_req, res) => {
   }
 })
 
-const tentativasLogin = new Map()
-const JANELA_LOGIN_MS = 15 * 60 * 1000
-const MAX_FALHAS_LOGIN = 8
-
-function falhasLogin(email) {
-  const agora = Date.now()
-  const lista = (tentativasLogin.get(email) || []).filter((t) => agora - t < JANELA_LOGIN_MS)
-  tentativasLogin.set(email, lista)
-  return lista
+/** Janela deslizante em memória; limpa as chaves velhas para não crescer sem fim. */
+function criarLimite(janelaMs, maximo) {
+  const marcas = new Map()
+  setInterval(() => {
+    const agora = Date.now()
+    for (const [chave, lista] of marcas) {
+      const recentes = lista.filter((t) => agora - t < janelaMs)
+      if (recentes.length) marcas.set(chave, recentes)
+      else marcas.delete(chave)
+    }
+  }, janelaMs).unref()
+  return {
+    estourou(chave) {
+      const agora = Date.now()
+      const recentes = (marcas.get(chave) || []).filter((t) => agora - t < janelaMs)
+      marcas.set(chave, recentes)
+      return recentes.length >= maximo
+    },
+    marcar(chave) {
+      const lista = marcas.get(chave) || []
+      lista.push(Date.now())
+      marcas.set(chave, lista)
+    },
+    limpar(chave) {
+      marcas.delete(chave)
+    },
+  }
 }
 
+const QUINZE_MIN = 15 * 60 * 1000
+const falhasPorEmail = criarLimite(QUINZE_MIN, 8)
+const falhasPorIp = criarLimite(QUINZE_MIN, 20)
+const HASH_FALSO = bcrypt.hashSync('hexavale-sem-admin', 10)
+
 app.post('/api/admin/login', async (req, res) => {
+  const ip = req.ip || 'desconhecido'
   const email = String(req.body?.email || '')
     .trim()
     .toLowerCase()
-  const senha = String(req.body?.senha || '')
+    .slice(0, 190)
+  const senha = String(req.body?.senha || '').slice(0, 200)
   if (!email || !senha) {
     res.status(400).json({ error: 'Informe e-mail e senha.' })
     return
   }
-  if (falhasLogin(email).length >= MAX_FALHAS_LOGIN) {
+  if (falhasPorIp.estourou(ip) || falhasPorEmail.estourou(email)) {
     res.status(429).json({ error: 'Muitas tentativas. Espere alguns minutos.' })
     return
   }
 
-  const [rows] = await pool.query('SELECT * FROM admins WHERE email = ? LIMIT 1', [
-    email,
-  ])
+  const [rows] = await pool.query(
+    'SELECT id, nome, email, senha_hash FROM admins WHERE email = ? LIMIT 1',
+    [email],
+  )
   const admin = rows[0]
-  if (!admin || !(await bcrypt.compare(senha, admin.senha_hash))) {
-    falhasLogin(email).push(Date.now())
+  const senhaOk = await bcrypt.compare(senha, admin?.senha_hash || HASH_FALSO)
+  if (!admin || !senhaOk) {
+    falhasPorIp.marcar(ip)
+    falhasPorEmail.marcar(email)
     res.status(401).json({ error: 'E-mail ou senha inválidos.' })
     return
   }
-  tentativasLogin.delete(email)
+  falhasPorEmail.limpar(email)
+  falhasPorIp.limpar(ip)
 
   const token = signAdmin({ id: admin.id, email: admin.email, nome: admin.nome })
   res.json({ token, admin: { id: admin.id, nome: admin.nome, email: admin.email } })
@@ -333,21 +383,12 @@ app.get('/api/ads/atual', async (_req, res) => {
   })
 })
 
-const registrosLoginPorIp = new Map()
-const JANELA_REGISTRO_MS = 60 * 1000
-const MAX_REGISTROS_POR_IP = 10
-
-function registrosRecentes(ip) {
-  const agora = Date.now()
-  const lista = (registrosLoginPorIp.get(ip) || []).filter((t) => agora - t < JANELA_REGISTRO_MS)
-  registrosLoginPorIp.set(ip, lista)
-  return lista
-}
+const registrosPorIp = criarLimite(60 * 1000, 10)
 
 /** O app chama a cada login do produtor; sem aceite da política o login nem acontece. */
 app.post('/api/login-historico', async (req, res) => {
   const ip = req.ip || 'desconhecido'
-  if (registrosRecentes(ip).length >= MAX_REGISTROS_POR_IP) {
+  if (registrosPorIp.estourou(ip)) {
     res.status(429).json({ error: 'Muitos registros seguidos.' })
     return
   }
@@ -357,7 +398,7 @@ app.post('/api/login-historico', async (req, res) => {
     res.status(400).json({ error: 'Telefone ou propriedade inválidos.' })
     return
   }
-  registrosRecentes(ip).push(Date.now())
+  registrosPorIp.marcar(ip)
   await pool.query('INSERT INTO login_historico (telefone, propriedade) VALUES (?, ?)', [
     telefone,
     propriedade,
@@ -403,11 +444,19 @@ app.post('/api/admin/videos', authAdmin, (req, res) => {
       return
     }
 
-    const titulo = String(req.body?.titulo || '').trim() || req.file.originalname
-    const [result] = await pool.query(
-      'INSERT INTO ad_videos (titulo, arquivo, mime, tamanho_bytes, ativo) VALUES (?, ?, ?, ?, 1)',
-      [titulo, req.file.filename, req.file.mimetype, req.file.size],
-    )
+    const titulo = (String(req.body?.titulo || '').trim() || req.file.originalname).slice(0, 180)
+    let result
+    try {
+      ;[result] = await pool.query(
+        'INSERT INTO ad_videos (titulo, arquivo, mime, tamanho_bytes, ativo) VALUES (?, ?, ?, ?, 1)',
+        [titulo, req.file.filename, req.file.mimetype, req.file.size],
+      )
+    } catch (error) {
+      fs.unlink(req.file.path, () => {})
+      console.error(error)
+      res.status(500).json({ error: 'Não foi possível salvar o vídeo.' })
+      return
+    }
 
     res.status(201).json({
       id: result.insertId,
@@ -419,8 +468,17 @@ app.post('/api/admin/videos', authAdmin, (req, res) => {
   })
 })
 
+function idValido(valor) {
+  const id = Number(valor)
+  return Number.isSafeInteger(id) && id > 0 ? id : null
+}
+
 app.patch('/api/admin/videos/:id', authAdmin, async (req, res) => {
-  const id = Number(req.params.id)
+  const id = idValido(req.params.id)
+  if (!id) {
+    res.status(404).json({ error: 'Vídeo não encontrado.' })
+    return
+  }
   const ativo = req.body?.ativo ? 1 : 0
   const [result] = await pool.query('UPDATE ad_videos SET ativo = ? WHERE id = ?', [
     ativo,
@@ -434,7 +492,11 @@ app.patch('/api/admin/videos/:id', authAdmin, async (req, res) => {
 })
 
 app.delete('/api/admin/videos/:id', authAdmin, async (req, res) => {
-  const id = Number(req.params.id)
+  const id = idValido(req.params.id)
+  if (!id) {
+    res.status(404).json({ error: 'Vídeo não encontrado.' })
+    return
+  }
   const [rows] = await pool.query('SELECT arquivo FROM ad_videos WHERE id = ?', [id])
   const video = rows[0]
   if (!video) {
@@ -464,6 +526,27 @@ if (serveApp) {
     res.sendFile(path.join(distDir, 'index.html'))
   })
 }
+
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Rota não encontrada.' })
+})
+
+/** Erro inesperado: registra no log e responde sem expor detalhes internos. */
+app.use((error, _req, res, _next) => {
+  const bruto = Number(error.status || error.statusCode) || 500
+  const status = bruto >= 400 && bruto < 600 ? bruto : 500
+  if (status >= 500) console.error(error)
+  if (res.headersSent) return
+  const mensagem =
+    status === 404
+      ? 'Não encontrado.'
+      : status === 413
+        ? 'Envio grande demais.'
+        : status < 500
+          ? 'Requisição inválida.'
+          : 'Erro no servidor.'
+  res.status(status).json({ error: mensagem })
+})
 
 ensureSchema()
   .then(() => {

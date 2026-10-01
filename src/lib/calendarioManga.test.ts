@@ -8,7 +8,6 @@ import {
   formatBrUtc,
   isoAnoSemanaUtc,
   laborCalc,
-  modoOperacao,
   montarNovaVariedade,
   operacaoVazia,
   palmerPadrao,
@@ -23,14 +22,6 @@ describe('isoAnoSemanaUtc', () => {
   it('bate a semana 37 de 09/09/2026 da planilha', () => {
     expect(isoAnoSemanaUtc(parseIsoUtc('2026-09-09'))).toEqual({ year: 2026, week: 37 })
     expect(isoAnoSemanaUtc(parseIsoUtc('2026-09-16'))).toEqual({ year: 2026, week: 38 })
-  })
-})
-
-describe('modoOperacao', () => {
-  it('marca pulverização mecanizada pelo nome e poda como manual', () => {
-    const talhao = talhaoPadrao()
-    expect(modoOperacao(operacaoVazia('Pulv. meca. (turbo atomizador)', talhao))).toBe('mecanizado')
-    expect(modoOperacao(operacaoVazia('Poda', talhao))).toBe('manual')
   })
 })
 

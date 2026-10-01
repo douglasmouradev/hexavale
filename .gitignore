@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 .env
+.env.*
+!.env.example
+teste local
 server/uploads/videos/*
 !server/uploads/videos/.gitkeep
 !server/uploads/videos/hexavale-amostra.mp4

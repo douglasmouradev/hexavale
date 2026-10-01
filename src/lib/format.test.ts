@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCurrency, formatDiaPorExtenso, formatMilhar, parseDecimal } from '@/lib/format'
+import { formatCurrency, formatMilhar, parseDecimal } from '@/lib/format'
 
 describe('formatMilhar', () => {
   it('põe ponto de milhar e volta a ler o mesmo número', () => {
@@ -36,11 +36,5 @@ describe('formatCurrency', () => {
   it('mostra 3 casas quando o litro fica abaixo de 5 centavos', () => {
     expect(formatCurrency(0.021)).toContain('0,021')
     expect(formatCurrency(4.2)).toContain('4,20')
-  })
-})
-
-describe('formatDiaPorExtenso', () => {
-  it('escreve o mês em português curto', () => {
-    expect(formatDiaPorExtenso('2026-12-15')).toBe('15 de dez 2026')
   })
 })

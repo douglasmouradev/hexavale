@@ -4,7 +4,7 @@ services:
     container_name: hexa-manga-mysql
     restart: unless-stopped
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     environment:
       MYSQL_DATABASE: hexa_manga
       MYSQL_USER: hexa

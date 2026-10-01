@@ -5,9 +5,7 @@
  */
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import { STORAGE_KEYS } from '@/data/constants'
-import { amostraJaLancada, lancarItensDeTeste, marcarAmostraLancada } from '@/lib/amostra'
 import { limparAdSessao } from '@/lib/ads'
-import { totalSemana } from '@/lib/ciclo'
 import {
   apagarDadosTitular,
   consentimentoValido as consentimentoDaVersao,
@@ -19,7 +17,7 @@ import {
 } from '@/lib/lgpd'
 import { limparCalculos } from '@/hooks/useSessionState'
 import { readStore, removeStore, writeStore } from '@/storage/localStore'
-import { PRODUTOR_PADRAO, type CicloCultura, type ConfigProdutor, type Propriedade } from '@/types/models'
+import { PRODUTOR_PADRAO, type ConfigProdutor, type Propriedade } from '@/types/models'
 
 interface AppContextValue {
   propriedade: Propriedade | null
@@ -51,30 +49,10 @@ function loadProdutor(): ConfigProdutor {
   }
 }
 
-function cicloTemCusto() {
-  const ciclo = readStore<CicloCultura>(STORAGE_KEYS.ciclo)
-  return Boolean(ciclo?.semanas?.some((semana) => totalSemana(semana) > 0))
-}
-
-function aplicarAmostraSeVazio(produtor: ConfigProdutor) {
-  if (!import.meta.env.DEV) return produtor
-  if (amostraJaLancada()) return produtor
-  if (cicloTemCusto()) {
-    marcarAmostraLancada()
-    return produtor
-  }
-  return lancarItensDeTeste(produtor)
-}
-
 function loadInitialState() {
-  const propriedade = readStore<Propriedade>(STORAGE_KEYS.propriedade)
-  let produtor = loadProdutor()
-  if (propriedade && import.meta.env.DEV) {
-    produtor = aplicarAmostraSeVazio(produtor)
-  }
   return {
-    propriedade,
-    produtor,
+    propriedade: readStore<Propriedade>(STORAGE_KEYS.propriedade),
+    produtor: loadProdutor(),
     consentimento: lerConsentimento(),
   }
 }
@@ -105,9 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         limparCalculos()
         setPropriedade(next)
         setConsentimento(registrarConsentimento())
-        setProdutor(
-          import.meta.env.DEV ? aplicarAmostraSeVazio(loadProdutor()) : loadProdutor(),
-        )
+        setProdutor(loadProdutor())
         return next
       },
       /** Sair tira nome, telefone e os cálculos da sessão. */
